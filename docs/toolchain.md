@@ -26,6 +26,15 @@ This document defines a practical default toolchain for the project.
 - Pytest for tests
 - Pylance/Pyright type checking set to standard initially
 
+Current baseline commands:
+- `ruff format scripts`
+- `ruff format --check scripts`
+- `ruff check scripts`
+
+Recommended local order:
+1. `ruff format scripts`
+2. `ruff check scripts`
+
 ### Data and database
 - PostgreSQL 16
 - SQLAlchemy + psycopg (when ingestion code is added)
@@ -38,6 +47,8 @@ This document defines a practical default toolchain for the project.
 ### CI baseline
 - GitHub Actions
 - Mermaid sync and render validation
+- Ruff format check
+- Ruff lint check
 
 ## Add next (recommended)
 - pre-commit hooks for Ruff and basic checks

@@ -1,8 +1,8 @@
 import argparse
 import json
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "docs" / "architecture" / "diagram-model.json"
@@ -32,7 +32,10 @@ def _shape(node_id: str, label: str, shape: str) -> str:
 def render_system_architecture(model: dict) -> str:
     arch = model["systemArchitecture"]
     nodes = {n["id"]: n for n in arch["nodes"]}
-    lines = ["%% AUTO-GENERATED FROM docs/architecture/diagram-model.json", f"flowchart {arch.get('direction', 'LR')}"]
+    lines = [
+        "%% AUTO-GENERATED FROM docs/architecture/diagram-model.json",
+        f"flowchart {arch.get('direction', 'LR')}",
+    ]
 
     in_subgraph = set()
     for subgraph in arch.get("subgraphs", []):
@@ -90,7 +93,10 @@ def render_tech_tree(model: dict) -> str:
     items = delivery["workItems"]
     by_id = {item["id"]: item for item in items}
 
-    lines = ["%% AUTO-GENERATED FROM docs/architecture/diagram-model.json", f"flowchart {delivery.get('direction', 'TD')}"]
+    lines = [
+        "%% AUTO-GENERATED FROM docs/architecture/diagram-model.json",
+        f"flowchart {delivery.get('direction', 'TD')}",
+    ]
 
     for item in items:
         label = f"Node {item['id']}<br/>{item['title']}<br/>{item['storyPoints']} SP"
@@ -186,7 +192,9 @@ def run_write(model: dict) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate Mermaid artifacts from central JSON model")
+    parser = argparse.ArgumentParser(
+        description="Generate Mermaid artifacts from central JSON model"
+    )
     parser.add_argument("--check", action="store_true", help="Check if generated files are in sync")
     args = parser.parse_args()
 

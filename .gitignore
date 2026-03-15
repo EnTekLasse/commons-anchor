@@ -1,6 +1,7 @@
 .env
 *.log
 .DS_Store
+.venv/
 
 # Local runtime data
 postgres_data/

@@ -284,6 +284,7 @@ Principles:
 
 ```text
 .
+|- pyproject.toml
 |- docker-compose.yml
 |- .env.example
 |- .github/workflows/mermaid-validate.yml
