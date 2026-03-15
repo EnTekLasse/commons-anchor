@@ -37,7 +37,9 @@ Recommended local order:
 
 ### Data and database
 - PostgreSQL 16
-- SQLAlchemy + psycopg (when ingestion code is added)
+- requests for public API ingestion
+- psycopg for direct PostgreSQL writes
+- SQLAlchemy later if the ingestion/transform layer grows in complexity
 - Alembic for migrations (planned)
 
 ### Documentation and architecture

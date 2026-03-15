@@ -14,7 +14,10 @@ flowchart TD
   V3[Node V3<br/>Backup and restore drill<br/>5 SP]
   V4[Node V4<br/>Cross-machine parity test<br/>5 SP]
   G1[Node G1<br/>Production host<br/>8 SP]
+  S1[Node S1<br/>Local secrets baseline<br/>2 SP]
+  S2[Node S2<br/>DB password rotation<br/>2 SP]
   H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
+  H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
@@ -36,7 +39,12 @@ flowchart TD
   E1 --> G1
   F1 --> G1
   V4 --> G1
+  A1 --> S1
+  S1 --> S2
+  A2 --> S2
   G1 --> H1
+  S2 --> H2
+  T3 --> H2
   A1 --> T1
   T1 --> T2
   A2 --> T2
@@ -59,7 +67,10 @@ flowchart TD
   class V3 backlog
   class V4 backlog
   class G1 backlog
+  class S1 done
+  class S2 done
   class H1 backlog
+  class H2 backlog
   class T1 done
   class T2 backlog
   class T3 backlog

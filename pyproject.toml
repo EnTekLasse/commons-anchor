@@ -1,10 +1,23 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scripts*"]
+
 [project]
 name = "commons-anchor"
 version = "0.1.0"
 description = "Self-hosted data platform for applied learning and technical demonstration"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+	"psycopg[binary]>=3.2,<3.3",
+	"requests>=2.32,<3.0",
+]
+
+[project.scripts]
+energidata-ingest = "scripts.energidataservice_ingest:main"
 
 [project.optional-dependencies]
 dev = [
@@ -15,7 +28,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["scripts"]
+src = ["scripts", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -25,7 +38,7 @@ testpaths = ["tests"]
 
 [tool.pyright]
 typeCheckingMode = "standard"
-include = ["scripts"]
+include = ["scripts", "tests"]
 venvPath = "."
 venv = ".venv"
 

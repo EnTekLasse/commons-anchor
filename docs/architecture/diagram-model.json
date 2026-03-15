@@ -55,7 +55,10 @@
       { "id": "V3", "title": "Backup and restore drill", "storyPoints": 5, "status": "backlog", "dependsOn": ["V2"] },
       { "id": "V4", "title": "Cross-machine parity test", "storyPoints": 5, "status": "backlog", "dependsOn": ["V3"] },
       { "id": "G1", "title": "Production host", "storyPoints": 8, "status": "backlog", "dependsOn": ["E1", "F1", "V4"] },
+      { "id": "S1", "title": "Local secrets baseline", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
+      { "id": "S2", "title": "DB password rotation", "storyPoints": 2, "status": "done", "dependsOn": ["S1", "A2"] },
       { "id": "H1", "title": "WireGuard + SSH hardening", "storyPoints": 8, "status": "backlog", "dependsOn": ["G1"] },
+      { "id": "H2", "title": "Secrets hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["S2", "T3"] },
       { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
       { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["T1", "A2"] },
       { "id": "T3", "title": "Toolchain hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["T2"] }

@@ -3,6 +3,9 @@
 ## Objective
 Secure remote administration access without exposing SSH directly to the public internet.
 
+Related local credential handling:
+- [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md)
+
 ## Design
 - WireGuard endpoint on home server or router
 - SSH listens on LAN only

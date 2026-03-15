@@ -18,6 +18,41 @@ services:
       timeout: 5s
       retries: 5
 
+  energidata-ingest:
+    build:
+      context: .
+      dockerfile: infra/docker/ingest.Dockerfile
+    container_name: ca-energidata-ingest
+    profiles:
+      - jobs
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      DW_HOST: postgres
+      DW_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  power-price-transform:
+    image: postgres:16
+    container_name: ca-power-price-transform
+    profiles:
+      - jobs
+    restart: "no"
+    env_file:
+      - .env
+    volumes:
+      - ./infra/sql/transform:/sql/transform:ro
+    command:
+      - sh
+      - -c
+      - psql -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/transform/001_refresh_power_price_hourly.sql
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   mqtt:
     image: eclipse-mosquitto:2
     container_name: ca-mqtt

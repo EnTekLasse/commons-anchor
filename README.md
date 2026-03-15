@@ -105,6 +105,8 @@ kanban
 
     [8 SP - WireGuard + SSH hardening]
 
+    [3 SP - Secrets hardening pass]
+
     [3 SP - Toolchain automation baseline]
 
     [3 SP - Toolchain hardening pass]
@@ -118,6 +120,10 @@ kanban
     [5 SP - Docker baseline]
 
     [3 SP - Postgres schemas]
+
+    [2 SP - Local secrets baseline]
+
+    [2 SP - DB password rotation]
 
     [2 SP - Toolchain baseline document]
 ```
@@ -143,7 +149,10 @@ flowchart TD
   V3[Node V3<br/>Backup and restore drill<br/>5 SP]
   V4[Node V4<br/>Cross-machine parity test<br/>5 SP]
   G1[Node G1<br/>Production host<br/>8 SP]
+  S1[Node S1<br/>Local secrets baseline<br/>2 SP]
+  S2[Node S2<br/>DB password rotation<br/>2 SP]
   H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
+  H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
@@ -165,7 +174,12 @@ flowchart TD
   E1 --> G1
   F1 --> G1
   V4 --> G1
+  A1 --> S1
+  S1 --> S2
+  A2 --> S2
   G1 --> H1
+  S2 --> H2
+  T3 --> H2
   A1 --> T1
   T1 --> T2
   A2 --> T2
@@ -188,7 +202,10 @@ flowchart TD
   class V3 backlog
   class V4 backlog
   class G1 backlog
+  class S1 done
+  class S2 done
   class H1 backlog
+  class H2 backlog
   class T1 done
   class T2 backlog
   class T3 backlog
@@ -207,6 +224,9 @@ Terminology glossary:
 
 Toolchain definition:
 - [docs/toolchain.md](docs/toolchain.md)
+
+Local secrets baseline:
+- [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md)
 
 ## Data architecture (layered model)
 
@@ -274,11 +294,40 @@ Principles:
 	docker compose up -d
 	```
 
-4. Open services
+4. Smoke-test Energi Data Service ingestion into PostgreSQL
+
+  ```powershell
+  docker compose --profile jobs run --rm energidata-ingest
+  ```
+
+5. Verify raw rows landed in PostgreSQL
+
+  ```powershell
+  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT dataset, area, ts_utc, price_dkk_mwh FROM staging.energinet_raw ORDER BY ts_utc DESC LIMIT 10;"
+  ```
+
+6. Run first mart transformation (hourly aggregate)
+
+  ```powershell
+  docker compose --profile jobs run --rm power-price-transform
+  ```
+
+7. Verify curated rows landed in mart
+
+  ```powershell
+  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT ts_utc, area, avg_price_dkk_mwh, source_count FROM mart.power_price_hourly ORDER BY ts_utc DESC, area ASC LIMIT 10;"
+  ```
+
+8. Open services
 - Grafana: http://localhost:3000
 - Metabase: http://localhost:3001
 - PostgreSQL: localhost:5432
 - MQTT broker: localhost:1883
+
+Notes:
+- The ingestion job defaults to the active `DayAheadPrices` dataset.
+- Historical backfill can later use `Elspotprices` for dates before 2025-10-01.
+- If you need a clean bootstrap after schema changes, run `docker compose down -v` before bringing the stack up again.
 
 ## Repository structure
 
