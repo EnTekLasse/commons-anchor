@@ -1,6 +1,7 @@
 {
   "files.associations": {
-    "*.mmd": "mermaid"
+    "*.mmd": "mermaid",
+    "*.sql": "pgsql"
   },
   "markdown.mermaid.enabled": true
 }

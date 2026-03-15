@@ -18,11 +18,13 @@ dependencies = [
 
 [project.scripts]
 energidata-ingest = "scripts.energidataservice_ingest:main"
+check-sql-syntax = "scripts.check_sql_syntax:main"
 
 [project.optional-dependencies]
 dev = [
 	"ruff>=0.11,<0.12",
 	"pytest>=8.0,<9.0",
+	"pglast>=7.7,<8.0",
 ]
 
 [tool.ruff]

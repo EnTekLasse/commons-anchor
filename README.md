@@ -239,6 +239,22 @@ Toolchain definition:
 Local secrets baseline:
 - [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md)
 
+## SQL syntax checks (PostgreSQL)
+
+If you come from SQL Server, it is easy to accidentally use T-SQL syntax that PostgreSQL rejects.
+Use the built-in parser-based checker to validate all SQL scripts under `infra/sql`:
+
+```bash
+python -m pip install .[dev]
+check-sql-syntax
+```
+
+Optional custom path:
+
+```bash
+check-sql-syntax --root path/to/sql
+```
+
 ## Data architecture (layered model)
 
 Target warehouse model is Raw/Enriched/Curated:
