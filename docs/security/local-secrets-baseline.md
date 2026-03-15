@@ -12,11 +12,16 @@ This project uses local Docker secret files for passwords and `.env` for non-sec
 2. Never commit `infra/secrets/*.secret` or `.env`.
 3. Keep placeholders and file paths in `.env.example` only.
 4. Store real secret values in a password manager as backup.
+5. Keep service bind addresses on `127.0.0.1` unless LAN access is explicitly needed.
 
 ## Setup on a new machine
 1. Copy `.env.example` to `.env`.
 2. Create local secret files under `infra/secrets`.
 3. Start services with Docker Compose.
+
+Default exposure profile:
+- PostgreSQL, MQTT, Grafana and Metabase bind to `127.0.0.1` by default.
+- If you need LAN clients (for example ESP32 MQTT), override the specific `*_BIND_ADDRESS` value in `.env`.
 
 PowerShell example:
 

@@ -225,6 +225,7 @@ flowchart TD
 
 Validation gates:
 - [docs/infra/environment-validation.md](docs/infra/environment-validation.md)
+- [Platform Smoke Gate workflow](.github/workflows/platform-smoke.yml)
 
 Diagram standards and templates:
 - [docs/architecture/mermaid-guidelines.md](docs/architecture/mermaid-guidelines.md)

@@ -1,0 +1,104 @@
+name: Platform Smoke Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare env and local secrets
+        shell: bash
+        run: |
+          cp .env.example .env
+          mkdir -p infra/secrets
+          printf 'ci-postgres-password\n' > infra/secrets/postgres_password.secret
+          printf 'ci-grafana-password\n' > infra/secrets/grafana_admin_password.secret
+
+      - name: Start PostgreSQL service
+        shell: bash
+        run: docker compose up -d postgres
+
+      - name: Wait for PostgreSQL health
+        shell: bash
+        run: |
+          for i in {1..30}; do
+            status="$(docker inspect --format='{{.State.Health.Status}}' ca-postgres 2>/dev/null || true)"
+            if [ "$status" = "healthy" ]; then
+              echo "PostgreSQL is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become healthy in time"
+          docker compose logs postgres
+          exit 1
+
+      - name: Run ingestion job (with retry)
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            if docker compose --profile jobs run --rm energidata-ingest; then
+              exit 0
+            fi
+            echo "Ingestion attempt $i failed; retrying in 5s..."
+            sleep 5
+          done
+          echo "Ingestion failed after retries"
+          exit 1
+
+      - name: Run transform job
+        shell: bash
+        run: docker compose --profile jobs run --rm power-price-transform
+
+      - name: Assert staging and mart data quality
+        shell: bash
+        run: |
+          docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+              IF NOT EXISTS (
+                  SELECT 1
+                  FROM staging.energinet_raw
+              ) THEN
+                  RAISE EXCEPTION 'Smoke gate failed: staging.energinet_raw is empty';
+              END IF;
+
+              IF NOT EXISTS (
+                  SELECT 1
+                  FROM mart.power_price_15min
+              ) THEN
+                  RAISE EXCEPTION 'Smoke gate failed: mart.power_price_15min is empty';
+              END IF;
+
+              IF EXISTS (
+                  SELECT 1
+                  FROM mart.power_price_15min
+                  WHERE ts_utc IS NULL
+                     OR area IS NULL
+                     OR price_dkk_mwh IS NULL
+              ) THEN
+                  RAISE EXCEPTION 'Smoke gate failed: null values found in mart.power_price_15min';
+              END IF;
+          END
+          $$;
+          SQL
+
+      - name: Print smoke summary
+        shell: bash
+        run: |
+          docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS staging_rows FROM staging.energinet_raw;"
+          docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS mart_rows FROM mart.power_price_15min;"
+
+      - name: Teardown
+        if: always()
+        shell: bash
+        run: docker compose down -v --remove-orphans
