@@ -1,0 +1,28 @@
+# Format: <type>: <short imperative summary>
+# Example: docs: add environment validation gates
+# Keep summary under 72 characters when practical.
+#
+# Common types:
+# feat     New functionality
+# fix      Bug fix
+# docs     Documentation-only changes
+# refactor Code restructuring without behavior change
+# chore    Maintenance, cleanup, tooling
+# ci       CI/CD or automation changes
+# test     Tests added or updated
+# perf     Performance improvement
+#
+# Why:
+# - What problem does this change solve?
+# - Why is it worth making now?
+#
+# What:
+# - Main change 1
+# - Main change 2
+#
+# Validation:
+# - Command run
+# - Manual check performed
+#
+# Refs:
+# - Optional issue, ADR, task, or node id
