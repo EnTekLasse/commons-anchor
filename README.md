@@ -103,6 +103,10 @@ kanban
 
     [8 SP - Production host]
 
+    [2 SP - Verify source numeric formats]
+
+    [3 SP - Define project numeric standard]
+
     [8 SP - WireGuard + SSH hardening]
 
     [3 SP - Secrets hardening pass]
@@ -151,6 +155,8 @@ flowchart TD
   G1[Node G1<br/>Production host<br/>8 SP]
   S1[Node S1<br/>Local secrets baseline<br/>2 SP]
   S2[Node S2<br/>DB password rotation<br/>2 SP]
+  N1[Node N1<br/>Verify source numeric formats<br/>2 SP]
+  N2[Node N2<br/>Define project numeric standard<br/>3 SP]
   H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
   H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
@@ -177,6 +183,9 @@ flowchart TD
   A1 --> S1
   S1 --> S2
   A2 --> S2
+  B1 --> N1
+  N1 --> N2
+  D1 --> N2
   G1 --> H1
   S2 --> H2
   T3 --> H2
@@ -204,6 +213,8 @@ flowchart TD
   class G1 backlog
   class S1 done
   class S2 done
+  class N1 backlog
+  class N2 backlog
   class H1 backlog
   class H2 backlog
   class T1 done
@@ -256,12 +267,12 @@ Approach:
 
 Execution cycle:
 1. Train simple baseline models
-2. Forecast on hourly grain for public data
+2. Forecast on 15-minute grain for public data
 3. Compare predictions with actual observations
 4. Improve features, transformations, and model choices
 
 Data grain policy:
-- Public datasets: hourly (MVP baseline)
+- Public spot prices: 15-minute intervals (MVP baseline)
 - IoT telemetry: around 5-minute intervals, aggregated to hourly for shared analysis
 
 ## Technology choices
@@ -286,43 +297,56 @@ Principles:
 	Copy-Item .env.example .env
 	```
 
-2. Update secrets in .env
+2. Create local secret files (not tracked by git)
 
-3. Start stack
+  ```powershell
+  New-Item -ItemType Directory -Force infra/secrets | Out-Null
+  Set-Content infra/secrets/postgres_password.secret "<strong-postgres-password>"
+  Set-Content infra/secrets/grafana_admin_password.secret "<strong-grafana-password>"
+  ```
+
+3. Update non-secret settings in .env if needed
+
+4. Start stack
 
 	```powershell
 	docker compose up -d
 	```
 
-4. Smoke-test Energi Data Service ingestion into PostgreSQL
+5. Smoke-test Energi Data Service ingestion into PostgreSQL
 
   ```powershell
   docker compose --profile jobs run --rm energidata-ingest
   ```
 
-5. Verify raw rows landed in PostgreSQL
+6. Verify raw rows landed in PostgreSQL
 
   ```powershell
   docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT dataset, area, ts_utc, price_dkk_mwh FROM staging.energinet_raw ORDER BY ts_utc DESC LIMIT 10;"
   ```
 
-6. Run first mart transformation (hourly aggregate)
+7. Run first mart transformation (15-minute curated)
 
   ```powershell
   docker compose --profile jobs run --rm power-price-transform
   ```
 
-7. Verify curated rows landed in mart
+8. Verify curated quarter-hour rows landed in mart
 
   ```powershell
-  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT ts_utc, area, avg_price_dkk_mwh, source_count FROM mart.power_price_hourly ORDER BY ts_utc DESC, area ASC LIMIT 10;"
+  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT ts_utc, area, price_dkk_mwh FROM mart.power_price_15min ORDER BY ts_utc DESC, area ASC LIMIT 10;"
   ```
 
-8. Open services
+9. Open services
 - Grafana: http://localhost:3000
 - Metabase: http://localhost:3001
 - PostgreSQL: localhost:5432
 - MQTT broker: localhost:1883
+
+10. Open the first dashboard in Grafana
+- Login with `GF_SECURITY_ADMIN_USER` from `.env`
+- Use password from `infra/secrets/grafana_admin_password.secret`
+- Navigate to Dashboards -> Commons Anchor -> Power Price Overview
 
 Notes:
 - The ingestion job defaults to the active `DayAheadPrices` dataset.

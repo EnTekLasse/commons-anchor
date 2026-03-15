@@ -1,6 +1,8 @@
 .env
 .env.local
 .env.backup
+infra/secrets/*.txt
+infra/secrets/*.secret
 *.log
 .DS_Store
 .venv/

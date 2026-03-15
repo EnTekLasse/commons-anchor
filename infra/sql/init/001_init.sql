@@ -25,10 +25,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS energinet_raw_dataset_area_ts_ux
 CREATE INDEX IF NOT EXISTS energinet_raw_ts_area_idx
     ON staging.energinet_raw (ts_utc, area);
 
-CREATE TABLE IF NOT EXISTS mart.power_price_hourly (
+CREATE TABLE IF NOT EXISTS mart.power_price_15min (
     ts_utc TIMESTAMPTZ NOT NULL,
     area TEXT NOT NULL,
-    avg_price_dkk_mwh NUMERIC(12, 4) NOT NULL,
+    price_dkk_mwh NUMERIC(12, 4) NOT NULL,
     source_count INT NOT NULL,
     refreshed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (ts_utc, area)

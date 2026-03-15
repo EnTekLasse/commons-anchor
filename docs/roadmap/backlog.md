@@ -15,7 +15,7 @@
 ## Epic B - Data platform core
 - B1: Stand up Postgres layered model (Raw/Enriched/Curated) (3)
 - B2: Build first ETL script for Energinet API into Raw (5)
-- B3: Create first Curated transformation for hourly prices (3)
+- B3: Create first Curated transformation for 15-minute spot prices (3)
 - B4: Add db migration flow (Alembic or dbmate) (5)
 
 ## Epic C - IoT ingestion (ESP32 over MQTT)
@@ -27,6 +27,11 @@
 - D1: Provision Grafana datasource + first dashboard (5)
 - D2: Build Metabase questions for project demo storyline (3)
 - D3: Add data quality dashboard (freshness + row count) (5)
+
+## Epic N - Numeric formatting and data presentation
+- N1: Verify numeric format from each source API and export format (2)
+- N2: Define cross-project numeric display standard (da-DK) (3)
+- N3: Apply numeric formatting standard in dashboards and docs (3)
 
 ## Epic E - Security and remote operations
 - E1: WireGuard server baseline (docker or host-level) (8)
