@@ -1,0 +1,9 @@
+.env
+*.log
+.DS_Store
+
+# Local runtime data
+postgres_data/
+grafana_data/
+mosquitto_data/
+mosquitto_log/

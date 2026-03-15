@@ -1,0 +1,64 @@
+{
+  "systemArchitecture": {
+    "direction": "LR",
+    "subgraphs": [
+      {
+        "name": "Sources",
+        "nodes": ["E", "A"]
+      }
+    ],
+    "nodes": [
+      { "id": "E", "label": "ESP32 devices", "shape": "rect" },
+      { "id": "A", "label": "Public APIs<br/>Energinet", "shape": "rect" },
+      { "id": "M", "label": "Mosquitto", "shape": "db" },
+      { "id": "I", "label": "Ingestion jobs", "shape": "rect" },
+      { "id": "B", "label": "PostgreSQL<br/>Raw layer", "shape": "db" },
+      { "id": "T", "label": "Transform jobs", "shape": "rect" },
+      { "id": "S", "label": "PostgreSQL<br/>Enriched layer", "shape": "db" },
+      { "id": "G1", "label": "PostgreSQL<br/>Curated layer", "shape": "db" },
+      { "id": "G", "label": "Grafana", "shape": "rect" },
+      { "id": "MB", "label": "Metabase", "shape": "rect" },
+      { "id": "U", "label": "Remote admin", "shape": "rect" },
+      { "id": "WG", "label": "WireGuard", "shape": "rect" },
+      { "id": "SSH", "label": "SSH on private LAN", "shape": "rect" },
+      { "id": "H", "label": "Ubuntu Server<br/>Lenovo Tiny", "shape": "rect" }
+    ],
+    "edges": [
+      ["E", "M", "MQTT"],
+      ["A", "I", "HTTP pull"],
+      ["M", "I"],
+      ["I", "B"],
+      ["B", "T"],
+      ["T", "S"],
+      ["S", "G1"],
+      ["G1", "G"],
+      ["G1", "MB"],
+      ["U", "WG", "WireGuard VPN"],
+      ["WG", "SSH"],
+      ["SSH", "H"]
+    ]
+  },
+  "delivery": {
+    "direction": "TD",
+    "workItems": [
+      { "id": "A1", "title": "Docker baseline", "storyPoints": 5, "status": "done", "dependsOn": [] },
+      { "id": "A2", "title": "Postgres schemas", "storyPoints": 3, "status": "done", "dependsOn": ["A1"] },
+      { "id": "B1", "title": "API ingestion", "storyPoints": 5, "status": "in_progress", "dependsOn": ["A2"] },
+      { "id": "B2", "title": "MQTT ingestion", "storyPoints": 8, "status": "backlog", "dependsOn": ["A2"] },
+      { "id": "C1", "title": "Curated transforms", "storyPoints": 3, "status": "backlog", "dependsOn": ["B1", "B2"] },
+      { "id": "D1", "title": "Grafana dashboards", "storyPoints": 5, "status": "backlog", "dependsOn": ["C1"] },
+      { "id": "D2", "title": "Metabase showcase", "storyPoints": 3, "status": "backlog", "dependsOn": ["C1"] },
+      { "id": "E1", "title": "Ops monitoring", "storyPoints": 5, "status": "backlog", "dependsOn": ["D1"] },
+      { "id": "F1", "title": "Project demo", "storyPoints": 3, "status": "backlog", "dependsOn": ["D2"] },
+      { "id": "V1", "title": "Local smoke test gate", "storyPoints": 3, "status": "in_progress", "dependsOn": ["C1", "D1"] },
+      { "id": "V2", "title": "Data integrity gate", "storyPoints": 3, "status": "backlog", "dependsOn": ["V1"] },
+      { "id": "V3", "title": "Backup and restore drill", "storyPoints": 5, "status": "backlog", "dependsOn": ["V2"] },
+      { "id": "V4", "title": "Cross-machine parity test", "storyPoints": 5, "status": "backlog", "dependsOn": ["V3"] },
+      { "id": "G1", "title": "Production host", "storyPoints": 8, "status": "backlog", "dependsOn": ["E1", "F1", "V4"] },
+      { "id": "H1", "title": "WireGuard + SSH hardening", "storyPoints": 8, "status": "backlog", "dependsOn": ["G1"] },
+      { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
+      { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["T1", "A2"] },
+      { "id": "T3", "title": "Toolchain hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["T2"] }
+    ]
+  }
+}

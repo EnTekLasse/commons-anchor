@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.mmd": "mermaid"
+  },
+  "markdown.mermaid.enabled": true
+}

@@ -1,0 +1,65 @@
+%% AUTO-GENERATED FROM docs/architecture/diagram-model.json
+flowchart TD
+  A1[Node A1<br/>Docker baseline<br/>5 SP]
+  A2[Node A2<br/>Postgres schemas<br/>3 SP]
+  B1[Node B1<br/>API ingestion<br/>5 SP]
+  B2[Node B2<br/>MQTT ingestion<br/>8 SP]
+  C1[Node C1<br/>Curated transforms<br/>3 SP]
+  D1[Node D1<br/>Grafana dashboards<br/>5 SP]
+  D2[Node D2<br/>Metabase showcase<br/>3 SP]
+  E1[Node E1<br/>Ops monitoring<br/>5 SP]
+  F1[Node F1<br/>Project demo<br/>3 SP]
+  V1[Node V1<br/>Local smoke test gate<br/>3 SP]
+  V2[Node V2<br/>Data integrity gate<br/>3 SP]
+  V3[Node V3<br/>Backup and restore drill<br/>5 SP]
+  V4[Node V4<br/>Cross-machine parity test<br/>5 SP]
+  G1[Node G1<br/>Production host<br/>8 SP]
+  H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
+  T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
+  T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
+  T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
+
+  A1 --> A2
+  A2 --> B1
+  A2 --> B2
+  B1 --> C1
+  B2 --> C1
+  C1 --> D1
+  C1 --> D2
+  D1 --> E1
+  D2 --> F1
+  C1 --> V1
+  D1 --> V1
+  V1 --> V2
+  V2 --> V3
+  V3 --> V4
+  E1 --> G1
+  F1 --> G1
+  V4 --> G1
+  G1 --> H1
+  A1 --> T1
+  T1 --> T2
+  A2 --> T2
+  T2 --> T3
+
+  classDef done fill:#d8f5d0,stroke:#2f7a2f,stroke-width:1px,color:#1c311c
+  classDef inProgress fill:#fff1c7,stroke:#8a6a00,stroke-width:1px,color:#3a2a00
+  classDef backlog fill:#e8edf3,stroke:#5a6b7d,stroke-width:1px,color:#1f2b38
+  class A1 done
+  class A2 done
+  class B1 inProgress
+  class B2 backlog
+  class C1 backlog
+  class D1 backlog
+  class D2 backlog
+  class E1 backlog
+  class F1 backlog
+  class V1 inProgress
+  class V2 backlog
+  class V3 backlog
+  class V4 backlog
+  class G1 backlog
+  class H1 backlog
+  class T1 done
+  class T2 backlog
+  class T3 backlog

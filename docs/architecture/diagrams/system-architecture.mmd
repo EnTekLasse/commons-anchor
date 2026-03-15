@@ -1,0 +1,32 @@
+%% AUTO-GENERATED FROM docs/architecture/diagram-model.json
+flowchart LR
+  subgraph Sources
+    E[ESP32 devices]
+    A[Public APIs<br/>Energinet]
+  end
+
+  M[(Mosquitto)]
+  I[Ingestion jobs]
+  B[(PostgreSQL<br/>Raw layer)]
+  T[Transform jobs]
+  S[(PostgreSQL<br/>Enriched layer)]
+  G1[(PostgreSQL<br/>Curated layer)]
+  G[Grafana]
+  MB[Metabase]
+  U[Remote admin]
+  WG[WireGuard]
+  SSH[SSH on private LAN]
+  H[Ubuntu Server<br/>Lenovo Tiny]
+
+  E -->|MQTT| M
+  A -->|HTTP pull| I
+  M --> I
+  I --> B
+  B --> T
+  T --> S
+  S --> G1
+  G1 --> G
+  G1 --> MB
+  U -->|WireGuard VPN| WG
+  WG --> SSH
+  SSH --> H
