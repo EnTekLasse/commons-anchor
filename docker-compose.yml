@@ -78,6 +78,33 @@ services:
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
 
+  mqtt-ingest:
+    build:
+      context: .
+      dockerfile: infra/docker/ingest.Dockerfile
+    container_name: ca-mqtt-ingest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      MQTT_TOPIC: ca/dev/+/telemetry
+      MQTT_SOURCE: phone_or_esp32
+      DW_HOST: postgres
+      DW_PORT: 5432
+    command:
+      - sh
+      - -c
+      - python -m scripts.mqtt_ingest --db-password "$$(cat /run/secrets/postgres_password)"
+    secrets:
+      - postgres_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+
   grafana:
     image: grafana/grafana:11.2.0
     container_name: ca-grafana

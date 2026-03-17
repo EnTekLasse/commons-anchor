@@ -308,6 +308,16 @@ Principles:
 
 ## Quick start (local)
 
+Windows note (recommended):
+- If your shell cannot find `python`, `pip`, or `pytest`, use the virtualenv executable explicitly:
+
+  ```powershell
+  c:/Users/lasse/serverprojekt/.venv/Scripts/python.exe -m pip install -e .[dev]
+  c:/Users/lasse/serverprojekt/.venv/Scripts/python.exe -m pytest -q
+  ```
+
+  This avoids PATH issues and ensures all commands run in the same environment.
+
 1. Copy env file
 
 	```powershell
@@ -354,13 +364,26 @@ Principles:
   docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT ts_utc, area, price_dkk_mwh FROM mart.power_price_15min ORDER BY ts_utc DESC, area ASC LIMIT 10;"
   ```
 
-9. Open services
+9. MQTT ingestion smoke test (phone/ESP32 -> MQTT -> Postgres)
+
+  ```powershell
+  docker compose up -d --build mqtt mqtt-ingest postgres
+  ```
+
+  Publish JSON telemetry to topic `ca/dev/phone01/telemetry`, then verify:
+
+  ```powershell
+  docker compose logs --tail 20 mqtt-ingest
+  docker exec ca-postgres psql -U dw_admin -d dw -c "SELECT id, topic, payload, ingested_at FROM staging.mqtt_raw ORDER BY id DESC LIMIT 5;"
+  ```
+
+10. Open services
 - Grafana: http://localhost:3000
 - Metabase: http://localhost:3001
 - PostgreSQL: localhost:5432
 - MQTT broker: localhost:1883
 
-10. Open the first dashboard in Grafana
+11. Open the first dashboard in Grafana
 - Login with `GF_SECURITY_ADMIN_USER` from `.env`
 - Use password from `infra/secrets/grafana_admin_password.secret`
 - Navigate to Dashboards -> Commons Anchor -> Power Price Overview
