@@ -15,3 +15,10 @@ postgres_data/
 grafana_data/
 mosquitto_data/
 mosquitto_log/
+
+# Local firmware workspace files
+firmware/.vscode/
+firmware/**/.vscode/
+firmware/**/.devcontainer/
+firmware/**/.clangd
+firmware/**/COMMIT_NOTES.md
