@@ -83,8 +83,6 @@ Project kanban:
 %% AUTO-GENERATED FROM docs/architecture/diagram-model.json
 kanban
   Backlog
-    [8 SP - MQTT ingestion]
-
     [3 SP - Curated transforms]
 
     [5 SP - Grafana dashboards]
@@ -124,6 +122,8 @@ kanban
     [5 SP - Docker baseline]
 
     [3 SP - Postgres schemas]
+
+    [8 SP - MQTT ingestion]
 
     [2 SP - Local secrets baseline]
 
@@ -200,7 +200,7 @@ flowchart TD
   class A1 done
   class A2 done
   class B1 inProgress
-  class B2 backlog
+  class B2 done
   class C1 backlog
   class D1 backlog
   class D2 backlog

@@ -44,7 +44,7 @@
       { "id": "A1", "title": "Docker baseline", "storyPoints": 5, "status": "done", "dependsOn": [] },
       { "id": "A2", "title": "Postgres schemas", "storyPoints": 3, "status": "done", "dependsOn": ["A1"] },
       { "id": "B1", "title": "API ingestion", "storyPoints": 5, "status": "in_progress", "dependsOn": ["A2"] },
-      { "id": "B2", "title": "MQTT ingestion", "storyPoints": 8, "status": "backlog", "dependsOn": ["A2"] },
+      { "id": "B2", "title": "MQTT ingestion", "storyPoints": 8, "status": "done", "dependsOn": ["A2"] },
       { "id": "C1", "title": "Curated transforms", "storyPoints": 3, "status": "backlog", "dependsOn": ["B1", "B2"] },
       { "id": "D1", "title": "Grafana dashboards", "storyPoints": 5, "status": "backlog", "dependsOn": ["C1"] },
       { "id": "D2", "title": "Metabase showcase", "storyPoints": 3, "status": "backlog", "dependsOn": ["C1"] },
