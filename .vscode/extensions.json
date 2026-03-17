@@ -1,6 +1,8 @@
 {
   "recommendations": [
-    "ms-ossdata.vscode-postgresql"
+    "ms-ossdata.vscode-postgresql",
+    "espressif.esp-idf-extension",
+    "ms-vscode.cpptools"
   ],
   "unwantedRecommendations": [
     "ms-mssql.mssql"

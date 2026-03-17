@@ -1,0 +1,47 @@
+menu "Commons Anchor IoT Logger"
+
+config APP_WIFI_SSID
+    string "Wi-Fi SSID"
+    default ""
+    help
+        SSID used by ESP32-C6 station mode.
+
+config APP_WIFI_PASSWORD
+    string "Wi-Fi password"
+    default ""
+    help
+        Wi-Fi password. Keep empty for open networks.
+
+config APP_MQTT_BROKER_URI
+    string "MQTT broker URI"
+    default "mqtt://192.168.1.10"
+    help
+        Example: mqtt://192.168.1.10 or mqtt://broker.local
+
+config APP_MQTT_TOPIC
+    string "MQTT topic"
+    default "commons-anchor/esp32c6/test"
+    help
+        Topic for fake sensor payloads.
+
+config APP_DEVICE_ID
+    string "Device ID override"
+    default "esp32c6-devkitm-1"
+    help
+        Leave as default or set empty to auto-generate from MAC.
+
+config APP_PUBLISH_INTERVAL_SEC
+    int "Publish interval (seconds)"
+    range 1 3600
+    default 10
+    help
+        Period between payload publishes.
+
+config APP_BUFFER_SIZE
+    int "Sample buffer size (queue depth)"
+    range 4 256
+    default 32
+    help
+        Number of sensor samples buffered in RAM while MQTT is disconnected.
+
+endmenu

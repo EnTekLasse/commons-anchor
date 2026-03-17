@@ -21,6 +21,12 @@ This document defines a practical default toolchain for the project.
 - Docker + Docker Compose
 - Environment files (`.env` per machine)
 
+### Firmware and device development
+- ESP-IDF extension for VS Code
+- ESP-IDF toolchain managed separately from the project Python venv
+- One firmware workspace subtree per board family under `firmware/`
+- Shared MQTT topic/payload contract documented in `docs/`
+
 ### Python quality
 - Ruff for linting and formatting
 - Pytest for tests
@@ -45,6 +51,7 @@ Recommended local order:
 ### Documentation and architecture
 - Mermaid diagrams generated from `docs/architecture/diagram-model.json`
 - README as canonical architecture surface
+- ESP-IDF onboarding and setup notes for beginner contributors
 
 ### CI baseline
 - GitHub Actions
@@ -57,6 +64,7 @@ Recommended local order:
 - pytest-cov coverage reporting
 - SQLFluff for SQL style/lint
 - Basic smoke test script for V1 gate
+- First ESP-IDF onboarding guide and firmware project template
 
 ## Add later (when needed)
 - Strict type checking in selected critical modules
@@ -69,6 +77,8 @@ Recommended local order:
 - Tests: Pytest
 - Types: Pylance standard first, strict by module over time
 - Diagrams: model-driven Mermaid generation script
+- Firmware IDE: VS Code + ESP-IDF extension
+- Firmware Python environment: ESP-IDF managed environment, not the root project `.venv`
 
 ## Non-goals for v1
 - Kubernetes
@@ -78,3 +88,8 @@ Recommended local order:
 ## Review cadence
 - Revisit this toolchain after each major milestone.
 - Promote tools from "next" to "required" only when team friction is low.
+
+## ESP-IDF note
+- Do not reuse the repo root Python virtual environment for ESP-IDF.
+- ESP-IDF brings its own Python packages and toolchain expectations, and mixing them with the data-platform venv will create avoidable breakage.
+- Treat firmware tooling as a separate concern even when it lives in the same Git repository.
