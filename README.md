@@ -377,6 +377,9 @@ Windows note (recommended):
   docker exec ca-postgres psql -U dw_admin -d dw -c "SELECT id, topic, payload, ingested_at FROM staging.mqtt_raw ORDER BY id DESC LIMIT 5;"
   ```
 
+  Android runbook (IoT MQTT Panel with dashboard + text input panel):
+  - [docs/infra/android-mqtt-smoke-test.md](docs/infra/android-mqtt-smoke-test.md)
+
 10. Open services
 - Grafana: http://localhost:3000
 - Metabase: http://localhost:3001
@@ -392,6 +395,7 @@ Notes:
 - The ingestion job defaults to the active `DayAheadPrices` dataset.
 - Historical backfill can later use `Elspotprices` for dates before 2025-10-01.
 - If you need a clean bootstrap after schema changes, run `docker compose down -v` before bringing the stack up again.
+- For manual MQTT app validation on Android, follow [docs/infra/android-mqtt-smoke-test.md](docs/infra/android-mqtt-smoke-test.md).
 
 ## Repository structure
 

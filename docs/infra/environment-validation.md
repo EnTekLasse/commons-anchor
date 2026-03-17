@@ -19,6 +19,7 @@ Pass criteria:
 
 Evidence:
 - Command log and timestamped screenshots.
+- Android MQTT smoke-test record using [docs/infra/android-mqtt-smoke-test.md](docs/infra/android-mqtt-smoke-test.md).
 
 ## V2 Data integrity gate
 Pass criteria:
