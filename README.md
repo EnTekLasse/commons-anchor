@@ -113,6 +113,8 @@ kanban
 
     [3 SP - Toolchain hardening pass]
 
+    [3 SP - Hardware bring-up baseline]
+
   [In Progress]
     [5 SP - API ingestion]
 
@@ -162,6 +164,7 @@ flowchart TD
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
+  HW1[Node HW1<br/>Hardware bring-up baseline<br/>3 SP]
 
   A1 --> A2
   A2 --> B1
@@ -193,6 +196,8 @@ flowchart TD
   T1 --> T2
   A2 --> T2
   T2 --> T3
+  B2 --> HW1
+  T1 --> HW1
 
   classDef done fill:#d8f5d0,stroke:#2f7a2f,stroke-width:1px,color:#1c311c
   classDef inProgress fill:#fff1c7,stroke:#8a6a00,stroke-width:1px,color:#3a2a00
@@ -220,6 +225,7 @@ flowchart TD
   class T1 done
   class T2 backlog
   class T3 backlog
+  class HW1 backlog
 ```
 <!-- AUTO_TECHTREE_END -->
 
