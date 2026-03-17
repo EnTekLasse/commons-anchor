@@ -90,6 +90,7 @@ services:
       MQTT_HOST: mqtt
       MQTT_PORT: 1883
       MQTT_TOPIC: ca/dev/+/telemetry
+      MQTT_QOS: 1
       MQTT_SOURCE: phone_or_esp32
       DW_HOST: postgres
       DW_PORT: 5432

@@ -370,6 +370,25 @@ Windows note (recommended):
   docker compose up -d --build mqtt mqtt-ingest postgres
   ```
 
+  MQTT ingest defaults:
+  - Topic filter: `ca/dev/+/telemetry`
+  - QoS: `1` (configurable with `MQTT_QOS` in `.env`)
+  - Source tag: `phone_or_esp32` (configurable with `MQTT_SOURCE`)
+
+  Expected payload contract (JSON object):
+
+  ```json
+  {"device_id":"phone01","temp_c":22.7,"hum_pct":41.8,"ts":"2026-03-17T20:30:00Z"}
+  ```
+
+  Required fields:
+  - `device_id` (non-empty string)
+  - `ts` (ISO timestamp)
+
+  Worker behavior:
+  - Valid JSON + valid contract -> row inserted into `staging.mqtt_raw`
+  - Invalid JSON or invalid contract -> message skipped and logged
+
   Publish JSON telemetry to topic `ca/dev/phone01/telemetry`, then verify:
 
   ```powershell
@@ -396,6 +415,7 @@ Notes:
 - Historical backfill can later use `Elspotprices` for dates before 2025-10-01.
 - If you need a clean bootstrap after schema changes, run `docker compose down -v` before bringing the stack up again.
 - For manual MQTT app validation on Android, follow [docs/infra/android-mqtt-smoke-test.md](docs/infra/android-mqtt-smoke-test.md).
+- MQTT ingest stability defaults live in `.env` (`MQTT_TOPIC`, `MQTT_QOS`, `MQTT_SOURCE`).
 
 ## Repository structure
 
