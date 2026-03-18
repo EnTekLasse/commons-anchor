@@ -269,9 +269,12 @@ Target warehouse model is Raw/Enriched/Curated:
 - Enriched: cleaned, standardized, quality-checked datasets
 - Curated: analytics-ready marts for dashboards and ML features
 
-MVP note:
-- Current SQL bootstrap uses `staging` and `mart` schemas.
-- Conceptual naming in docs follows Raw/Enriched/Curated.
+MVP schema mapping (conceptual -> physical):
+- Raw -> `staging`
+- Curated -> `mart`
+- Enriched -> planned as a dedicated schema in a later phase
+
+This keeps the conceptual model stable while the physical schema evolves incrementally.
 
 ## Terminology (short glossary)
 
@@ -318,8 +321,8 @@ Windows note (recommended):
 - If your shell cannot find `python`, `pip`, or `pytest`, use the virtualenv executable explicitly:
 
   ```powershell
-  c:/Users/lasse/serverprojekt/.venv/Scripts/python.exe -m pip install -e .[dev]
-  c:/Users/lasse/serverprojekt/.venv/Scripts/python.exe -m pytest -q
+  .\.venv\Scripts\python.exe -m pip install -e .[dev]
+  .\.venv\Scripts\python.exe -m pytest -q
   ```
 
   This avoids PATH issues and ensures all commands run in the same environment.

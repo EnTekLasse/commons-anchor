@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import paho.mqtt.client as mqtt
+import psycopg
 
 
 @dataclass(frozen=True)
@@ -27,8 +28,7 @@ class Settings:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Subscribe to MQTT telemetry and write payloads to "
-            "PostgreSQL staging.mqtt_raw."
+            "Subscribe to MQTT telemetry and write payloads to PostgreSQL staging.mqtt_raw."
         ),
     )
     parser.add_argument("--mqtt-host")
@@ -100,14 +100,20 @@ class DatabaseWriter:
         self.connection: Any | None = None
 
     def connect(self) -> None:
-        import psycopg
-
         self.connection = psycopg.connect(
             host=self.settings.db_host,
             port=self.settings.db_port,
             dbname=self.settings.db_name,
             user=self.settings.db_user,
             password=self.settings.db_password,
+        )
+
+    @staticmethod
+    def _is_connection_error(exc: psycopg.Error) -> bool:
+        # SQLSTATE class 08 is connection-related across PostgreSQL drivers.
+        sqlstate = getattr(exc, "sqlstate", None)
+        return bool(sqlstate and sqlstate.startswith("08")) or isinstance(
+            exc, psycopg.OperationalError | psycopg.InterfaceError
         )
 
     def close(self) -> None:
@@ -131,7 +137,10 @@ class DatabaseWriter:
                     (topic, Jsonb(payload), source),
                 )
             self.connection.commit()
-        except Exception:
+        except psycopg.Error as exc:
+            if not self._is_connection_error(exc):
+                raise
+
             # Reconnect once in case the database connection dropped in a long-running worker.
             self.close()
             self.connect()
@@ -157,15 +166,19 @@ def run(settings: Settings) -> None:
     writer = DatabaseWriter(settings)
     writer.connect()
     try:
-        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        callback_api_version = getattr(mqtt, "CallbackAPIVersion", None)
+        if callback_api_version is None:
+            client = mqtt.Client()
+        else:
+            client = mqtt.Client(callback_api_version.VERSION2)
         client.reconnect_delay_set(min_delay=1, max_delay=30)
 
         def on_connect(
             mqtt_client: mqtt.Client,
             _userdata: Any,
             _flags: dict[str, Any],
-            reason_code: mqtt.ReasonCode,
-            _properties: mqtt.Properties | None,
+            reason_code: Any,
+            _properties: Any,
         ) -> None:
             if reason_code.is_failure:
                 print(f"MQTT connect failed: {reason_code}")

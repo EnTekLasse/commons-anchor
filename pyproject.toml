@@ -43,6 +43,4 @@ testpaths = ["tests"]
 [tool.pyright]
 typeCheckingMode = "standard"
 include = ["scripts", "tests"]
-venvPath = "."
-venv = ".venv"
 

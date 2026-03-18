@@ -19,14 +19,25 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install project and dev dependencies
         run: python -m pip install --upgrade pip && python -m pip install .[dev]
+
+      - name: Install Pyright
+        run: npm install -g pyright
 
       - name: Run Ruff format check
         run: ruff format --check scripts tests
 
       - name: Run Ruff check
         run: ruff check scripts tests
+
+      - name: Run Pyright
+        run: pyright --pythonpath "$(python -c 'import sys; print(sys.executable)')"
 
       - name: Check PostgreSQL SQL syntax
         run: check-sql-syntax

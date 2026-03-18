@@ -1,12 +1,12 @@
+from argparse import Namespace
 from datetime import UTC, datetime
-from types import SimpleNamespace
 
 from scripts.energidataservice_ingest import build_request_params, load_settings, normalize_records
 
 
 def test_load_settings_defaults(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
-    args = SimpleNamespace(
+    args = Namespace(
         dataset=None,
         start=None,
         end=None,
@@ -30,7 +30,7 @@ def test_load_settings_defaults(monkeypatch):
 def test_build_request_params_uses_dataset_specific_columns(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
     monkeypatch.setenv("ENERGIDATASERVICE_DATASET", "Elspotprices")
-    args = SimpleNamespace(
+    args = Namespace(
         dataset=None,
         start=None,
         end=None,
@@ -52,7 +52,7 @@ def test_build_request_params_uses_dataset_specific_columns(monkeypatch):
 
 def test_normalize_records_converts_timestamp_and_price(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
-    args = SimpleNamespace(
+    args = Namespace(
         dataset="DayAheadPrices",
         start=None,
         end=None,
