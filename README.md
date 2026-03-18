@@ -426,6 +426,18 @@ Notes:
 - For manual MQTT app validation on Android, follow [docs/infra/android-mqtt-smoke-test.md](docs/infra/android-mqtt-smoke-test.md).
 - MQTT ingest stability defaults live in `.env` (`MQTT_TOPIC`, `MQTT_QOS`, `MQTT_SOURCE`).
 
+## Local quality gate
+
+Run the same checks locally that are enforced in CI:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff format --check scripts tests
+.\.venv\Scripts\python.exe -m ruff check scripts tests
+.\.venv\Scripts\python.exe -m pyright --pythonpath .\.venv\Scripts\python.exe
+.\.venv\Scripts\python.exe -m scripts.check_sql_syntax
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
 ## Repository structure
 
 ```text
