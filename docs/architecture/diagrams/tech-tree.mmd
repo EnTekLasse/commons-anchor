@@ -24,7 +24,7 @@ flowchart TD
   S2[Node S2<br/>DB password rotation<br/>2 SP]
   N1[Node N1<br/>Verify source numeric formats<br/>2 SP]
   N2[Node N2<br/>Define project numeric standard<br/>3 SP]
-  H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
+  H1[Node H1<br/>WireGuard + SSH hardening prep<br/>8 SP]
   H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
@@ -62,7 +62,8 @@ flowchart TD
   N1 --> N2
   C3 --> N2
   D1 --> N2
-  G1 --> H1
+  S2 --> H1
+  T3 --> H1
   S2 --> H2
   T3 --> H2
   A1 --> T1
@@ -99,7 +100,7 @@ flowchart TD
   class S2 done
   class N1 backlog
   class N2 backlog
-  class H1 backlog
+  class H1 inProgress
   class H2 backlog
   class T1 done
   class T2 backlog

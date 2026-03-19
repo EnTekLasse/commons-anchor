@@ -93,7 +93,7 @@
       { "id": "S2", "title": "DB password rotation", "storyPoints": 2, "status": "done", "dependsOn": ["S1", "A2"] },
       { "id": "N1", "title": "Verify source numeric formats", "storyPoints": 2, "status": "backlog", "dependsOn": ["B1"] },
       { "id": "N2", "title": "Define project numeric standard", "storyPoints": 3, "status": "backlog", "dependsOn": ["N1", "C3", "D1"] },
-      { "id": "H1", "title": "WireGuard + SSH hardening", "storyPoints": 8, "status": "backlog", "dependsOn": ["G1"] },
+      { "id": "H1", "title": "WireGuard + SSH hardening prep", "storyPoints": 8, "status": "in_progress", "dependsOn": ["S2", "T3"] },
       { "id": "H2", "title": "Secrets hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["S2", "T3"] },
       { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
       { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["T1", "A2"] },
