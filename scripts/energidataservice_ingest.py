@@ -128,14 +128,20 @@ def parse_utc_timestamp(value: str) -> datetime:
 
 
 def normalize_records(settings: Settings, records: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
+    # Price precision policy: API values are converted via str() before Decimal
+    # to avoid float rounding errors. DB column is NUMERIC(12, 4).
+    # Null prices are skipped: the API occasionally omits prices for future hours.
     spec = DATASET_SPECS[settings.dataset]
     normalized_rows: list[tuple[Any, ...]] = []
     for record in records:
+        raw_price = record[spec.price_column]
+        if raw_price is None:
+            continue
         normalized_rows.append(
             (
                 settings.dataset,
                 str(record["PriceArea"]),
-                Decimal(str(record[spec.price_column])),
+                Decimal(str(raw_price)),
                 parse_utc_timestamp(str(record[spec.time_column])),
                 Jsonb(record),
             )

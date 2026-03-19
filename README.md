@@ -176,8 +176,6 @@ kanban
 
     [8 SP - Production host]
 
-    [2 SP - Verify source numeric formats]
-
     [3 SP - Define project numeric standard]
 
     [3 SP - Secrets hardening pass]
@@ -192,6 +190,8 @@ kanban
     [5 SP - API ingestion]
 
     [3 SP - Local smoke test gate]
+
+    [2 SP - Verify source numeric formats]
 
     [8 SP - WireGuard + SSH hardening prep]
 
@@ -314,7 +314,7 @@ flowchart TD
   class G1 backlog
   class S1 done
   class S2 done
-  class N1 backlog
+  class N1 inProgress
   class N2 backlog
   class H1 inProgress
   class H2 backlog

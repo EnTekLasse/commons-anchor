@@ -50,6 +50,36 @@ def test_build_request_params_uses_dataset_specific_columns(monkeypatch):
     assert params["timezone"] == "UTC"
 
 
+def test_normalize_records_skips_null_price(monkeypatch):
+    monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
+    args = Namespace(
+        dataset="DayAheadPrices",
+        start=None,
+        end=None,
+        price_areas="DK1",
+        limit=None,
+        db_host=None,
+        db_port=None,
+        db_name=None,
+        db_user=None,
+        db_password=None,
+    )
+
+    settings = load_settings(args)
+    rows = normalize_records(
+        settings,
+        [
+            {
+                "PriceArea": "DK1",
+                "TimeUTC": "2026-03-16T22:00:00",
+                "DayAheadPriceDKK": None,
+            }
+        ],
+    )
+
+    assert rows == []
+
+
 def test_normalize_records_converts_timestamp_and_price(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
     args = Namespace(
