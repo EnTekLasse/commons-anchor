@@ -176,6 +176,8 @@ kanban
 
     [8 SP - Production host]
 
+    [2 SP - Verify MQTT telemetry numeric contract]
+
     [3 SP - Define project numeric standard]
 
     [3 SP - Secrets hardening pass]
@@ -191,8 +193,6 @@ kanban
 
     [3 SP - Local smoke test gate]
 
-    [2 SP - Verify source numeric formats]
-
     [8 SP - WireGuard + SSH hardening prep]
 
   Done
@@ -205,6 +205,8 @@ kanban
     [2 SP - Local secrets baseline]
 
     [2 SP - DB password rotation]
+
+    [1 SP - Verify Energinet numeric formats]
 
     [2 SP - Toolchain baseline document]
 ```
@@ -238,7 +240,8 @@ flowchart TD
   G1[Node G1<br/>Production host<br/>8 SP]
   S1[Node S1<br/>Local secrets baseline<br/>2 SP]
   S2[Node S2<br/>DB password rotation<br/>2 SP]
-  N1[Node N1<br/>Verify source numeric formats<br/>2 SP]
+  N1a[Node N1a<br/>Verify Energinet numeric formats<br/>1 SP]
+  N1b[Node N1b<br/>Verify MQTT telemetry numeric contract<br/>2 SP]
   N2[Node N2<br/>Define project numeric standard<br/>3 SP]
   H1[Node H1<br/>WireGuard + SSH hardening prep<br/>8 SP]
   H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
@@ -274,8 +277,10 @@ flowchart TD
   A1 --> S1
   S1 --> S2
   A2 --> S2
-  B1 --> N1
-  N1 --> N2
+  B1 --> N1a
+  B2 --> N1b
+  N1a --> N2
+  N1b --> N2
   C3 --> N2
   D1 --> N2
   S2 --> H1
@@ -314,7 +319,8 @@ flowchart TD
   class G1 backlog
   class S1 done
   class S2 done
-  class N1 inProgress
+  class N1a done
+  class N1b backlog
   class N2 backlog
   class H1 inProgress
   class H2 backlog
