@@ -97,7 +97,7 @@
       { "id": "H1", "title": "WireGuard + SSH hardening prep", "storyPoints": 8, "status": "in_progress", "dependsOn": ["S2", "T3"] },
       { "id": "H2", "title": "Secrets hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["S2", "T3"] },
       { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
-      { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["T1", "A2"] },
+      { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "done", "dependsOn": ["T1", "A2"] },
       { "id": "T3", "title": "Toolchain hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["T2"] },
       { "id": "HW1", "title": "Hardware bring-up baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["B2", "T1"] }
     ]

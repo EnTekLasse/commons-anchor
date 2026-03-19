@@ -24,7 +24,7 @@ def load_model() -> dict:
 
 
 def _escape_label(label: str) -> str:
-    return label.replace('"', r'\"')
+    return label.replace('"', r"\"")
 
 
 def _shape(node_id: str, label: str, shape: str) -> str:

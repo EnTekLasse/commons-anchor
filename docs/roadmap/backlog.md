@@ -47,7 +47,8 @@ Backlog policy:
 - S2: DB password rotation (2)
 
 ## Standards and Toolchain
-- N1: Verify source numeric formats (2)
+- N1a: Verify Energinet numeric formats (1) ✅
+- N1b: Verify MQTT telemetry numeric contract (2)
 - N2: Define project numeric standard (3)
 - T1: Toolchain baseline document (2)
 - T2: Toolchain automation baseline (3)
@@ -71,6 +72,6 @@ Backlog policy:
 - Sprint 1 (13 SP): A1, A2, B1
 - Sprint 2 (16 SP): B2, C1, C2
 - Sprint 3 (16 SP): C3, D1, D2, V1
-- Sprint 4 (16 SP): V2, V3, N1, N2, T2
+- Sprint 4 (16 SP): V2, V3, N1b, N2, T2
 - Sprint 5 (18 SP): V4, E1, G1
 - Sprint 6 (15 SP): H1, H2, S2, T3

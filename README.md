@@ -182,8 +182,6 @@ kanban
 
     [3 SP - Secrets hardening pass]
 
-    [3 SP - Toolchain automation baseline]
-
     [3 SP - Toolchain hardening pass]
 
     [3 SP - Hardware bring-up baseline]
@@ -209,6 +207,8 @@ kanban
     [1 SP - Verify Energinet numeric formats]
 
     [2 SP - Toolchain baseline document]
+
+    [3 SP - Toolchain automation baseline]
 ```
 <!-- AUTO_KANBAN_END -->
 
@@ -325,7 +325,7 @@ flowchart TD
   class H1 inProgress
   class H2 backlog
   class T1 done
-  class T2 backlog
+  class T2 done
   class T3 backlog
   class HW1 backlog
 ```
@@ -545,11 +545,25 @@ Notes:
 Run the same checks locally that are enforced in CI:
 
 ```powershell
+.\.venv\Scripts\python.exe -m pip install -e .[dev]
+.\.venv\Scripts\python.exe -m scripts.local_quality_gate
+```
+
+Expanded command sequence:
+
+```powershell
 .\.venv\Scripts\python.exe -m ruff format --check scripts tests
 .\.venv\Scripts\python.exe -m ruff check scripts tests
 .\.venv\Scripts\python.exe -m pyright --pythonpath .\.venv\Scripts\python.exe
 .\.venv\Scripts\python.exe -m scripts.check_sql_syntax
+.\.venv\Scripts\python.exe -m scripts.check_mermaid_compile --changed-only
 .\.venv\Scripts\python.exe -m pytest -q
+```
+
+Full Mermaid compile validation (all diagrams + README blocks):
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.check_mermaid_compile
 ```
 
 ## Repository structure

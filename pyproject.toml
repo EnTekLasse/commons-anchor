@@ -21,11 +21,14 @@ dependencies = [
 energidata-ingest = "scripts.energidataservice_ingest:main"
 mqtt-ingest = "scripts.mqtt_ingest:main"
 check-sql-syntax = "scripts.check_sql_syntax:main"
+local-quality-gate = "scripts.local_quality_gate:main"
+check-mermaid-compile = "scripts.check_mermaid_compile:main"
 
 [project.optional-dependencies]
 dev = [
 	"ruff>=0.11,<0.12",
 	"pytest>=8.0,<9.0",
+	"pyright>=1.1,<2.0",
 	"pglast>=7.7,<8.0",
 ]
 

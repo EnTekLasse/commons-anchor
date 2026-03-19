@@ -31,15 +31,19 @@ This document defines a practical default toolchain for the project.
 - Ruff for linting and formatting
 - Pytest for tests
 - Pylance/Pyright type checking set to standard initially
+- Single-command local gate via `local-quality-gate`
 
 Current baseline commands:
 - `ruff format scripts`
 - `ruff format --check scripts`
 - `ruff check scripts`
+- `check-mermaid-compile --changed-only`
+- `local-quality-gate`
 
 Recommended local order:
 1. `ruff format scripts`
 2. `ruff check scripts`
+3. `local-quality-gate`
 
 ### Data and database
 - PostgreSQL 16
@@ -50,6 +54,7 @@ Recommended local order:
 
 ### Documentation and architecture
 - Mermaid diagrams generated from `docs/architecture/diagram-model.json`
+- Mermaid compile validation via `check-mermaid-compile` (full) or `check-mermaid-compile --changed-only` (fast local)
 - README as canonical architecture surface
 - ESP-IDF onboarding and setup notes for beginner contributors
 
