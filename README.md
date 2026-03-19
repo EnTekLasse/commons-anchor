@@ -587,6 +587,46 @@ Full Mermaid compile validation (all diagrams + README blocks):
 	|- infra/ubuntu-lenovo-tiny.md
 	|- roadmap/backlog.md
 	\- security/wireguard-remote-access.md
+```text
+.
+|- pyproject.toml               # project metadata, entrypoints, dev deps
+|- docker-compose.yml           # all services (Postgres, Mosquitto, Grafana)
+|- .env.example                 # environment variable template
+|- .github/
+|  |- copilot-progress-reminder.md
+|  \- workflows/mermaid-validate.yml
+|- infra/
+|  |- docker/ingest.Dockerfile
+|  |- grafana/dashboards/ + provisioning/
+|  |- mosquitto/config/mosquitto.conf
+|  |- secrets/                  # gitignored; created manually per onboarding doc
+|  \- sql/init/001_init.sql
+|- scripts/
+|  |- local_quality_gate.py     # single-command quality gate
+|  |- check_mermaid_compile.py  # Mermaid compile validation
+|  |- check_sql_syntax.py
+|  |- energidataservice_ingest.py
+|  |- generate_mermaid_from_model.py
+|  \- mqtt_ingest.py
+|- tests/
+|  |- test_energidataservice_ingest.py
+|  \- test_mqtt_ingest.py
+|- firmware/
+|  \- hello_c6/                 # ESP32-C6 bring-up baseline
+\- docs/
+  |- architecture/
+  |  |- diagram-model.json     # source of truth for kanban + tech-tree
+  |  |- mermaid-guidelines.md
+  |  |- mermaid-templates.md
+  |  \- diagrams/              # auto-generated .mmd files
+  |- infra/ubuntu-lenovo-tiny.md
+  |- iot/esp-idf-toolchain.md
+  |- roadmap/backlog.md
+  |- security/local-secrets-baseline.md
+  |- security/wireguard-remote-access.md
+  |- glossary.md
+  \- toolchain.md
+```
 ```
 
 ## Delivery model

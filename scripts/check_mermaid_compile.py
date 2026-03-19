@@ -9,7 +9,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIAGRAMS_DIR = ROOT / "docs" / "architecture" / "diagrams"
-README_PATH = ROOT / "README.md"
+
+
+def _md_files_to_check() -> list[Path]:
+    """Return all markdown files in the project that may contain Mermaid blocks."""
+    files = [ROOT / "README.md"]
+    files += sorted((ROOT / "docs").rglob("*.md"))
+    files += sorted((ROOT / "firmware").rglob("*.md"))
+    return [f for f in files if f.exists()]
 
 
 def _cli_base() -> list[str]:
@@ -65,9 +72,10 @@ def _changed_paths() -> set[Path]:
     return changed
 
 
-def _extract_readme_blocks(temp_dir: Path) -> list[Path]:
+def _extract_md_blocks(md_path: Path, temp_dir: Path, offset: int) -> list[Path]:
+    """Extract Mermaid code blocks from a markdown file into numbered temp .mmd files."""
     blocks: list[Path] = []
-    lines = README_PATH.read_text(encoding="utf-8").splitlines()
+    lines = md_path.read_text(encoding="utf-8").splitlines()
     in_block = False
     current: list[str] = []
 
@@ -78,15 +86,14 @@ def _extract_readme_blocks(temp_dir: Path) -> list[Path]:
             continue
         if in_block and line.strip() == "```":
             in_block = False
-            path = temp_dir / f"readme-mermaid-{len(blocks) + 1}.mmd"
+            n = offset + len(blocks) + 1
+            path = temp_dir / f"{md_path.stem}-mermaid-{n}.mmd"
             path.write_text("\n".join(current) + "\n", encoding="utf-8")
             blocks.append(path)
             continue
         if in_block:
             current.append(line)
 
-    if not blocks:
-        raise SystemExit("No Mermaid blocks found in README.md")
     return blocks
 
 
@@ -120,18 +127,19 @@ def main() -> int:
 
     cli = _cli_base()
     diagrams = sorted(DIAGRAMS_DIR.glob("*.mmd"))
-    include_readme = True
+    all_md_files = _md_files_to_check()
+    md_files_to_check = all_md_files
 
     if args.changed_only:
         changed = _changed_paths()
         if changed:
             diagrams = [src for src in diagrams if src in changed]
-            include_readme = README_PATH in changed
+            md_files_to_check = [p for p in all_md_files if p in changed]
         else:
             diagrams = []
-            include_readme = False
+            md_files_to_check = []
 
-        if not diagrams and not include_readme:
+        if not diagrams and not md_files_to_check:
             print("[mermaid-check] no Mermaid-related changes detected; skipping compile")
             return 0
 
@@ -142,9 +150,12 @@ def main() -> int:
             if _compile_mmd(src, cli, temp_dir) != 0:
                 return 1
 
-        if include_readme:
-            for src in _extract_readme_blocks(temp_dir):
-                if _compile_mmd(src, cli, temp_dir) != 0:
+        block_offset = 0
+        for md_path in md_files_to_check:
+            blocks = _extract_md_blocks(md_path, temp_dir, block_offset)
+            block_offset += len(blocks)
+            for block in blocks:
+                if _compile_mmd(block, cli, temp_dir) != 0:
                     return 1
 
     print("[mermaid-check] all Mermaid files compiled successfully")
