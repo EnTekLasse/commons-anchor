@@ -23,10 +23,15 @@ def load_model() -> dict:
     return json.loads(MODEL_PATH.read_text(encoding="utf-8"))
 
 
+def _escape_label(label: str) -> str:
+    return label.replace('"', r'\"')
+
+
 def _shape(node_id: str, label: str, shape: str) -> str:
+    safe_label = _escape_label(label)
     if shape == "db":
-        return f"{node_id}[({label})]"
-    return f"{node_id}[{label}]"
+        return f'{node_id}[("{safe_label}")]'
+    return f'{node_id}["{safe_label}"]'
 
 
 def render_system_architecture(model: dict) -> str:
@@ -39,7 +44,14 @@ def render_system_architecture(model: dict) -> str:
 
     in_subgraph = set()
     for subgraph in arch.get("subgraphs", []):
-        lines.append(f"  subgraph {subgraph['name']}")
+        subgraph_id = subgraph.get("id")
+        subgraph_label = subgraph.get("label")
+        if subgraph_id and subgraph_label is not None:
+            lines.append(f'  subgraph {subgraph_id}["{_escape_label(subgraph_label)}"]')
+        else:
+            lines.append(f"  subgraph {subgraph['name']}")
+        if subgraph.get("direction"):
+            lines.append(f"    direction {subgraph['direction']}")
         for node_id in subgraph["nodes"]:
             node = nodes[node_id]
             lines.append("    " + _shape(node_id, node["label"], node.get("shape", "rect")))

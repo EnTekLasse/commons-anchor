@@ -1,32 +1,56 @@
 %% AUTO-GENERATED FROM docs/architecture/diagram-model.json
-flowchart LR
-  subgraph Sources
-    E[ESP32 devices]
-    A[Public APIs<br/>Energinet]
+flowchart TB
+  subgraph Ops access
+    direction TB
+    U["Remote admin"]
+    WG["WireGuard"]
+    SSH["SSH on private LAN"]
+    H["Ubuntu Server<br/>Lenovo Tiny"]
   end
 
-  M[(Mosquitto)]
-  I[Ingestion jobs]
-  B[(PostgreSQL<br/>Raw layer)]
-  T[Transform jobs]
-  S[(PostgreSQL<br/>Enriched layer)]
-  G1[(PostgreSQL<br/>Curated layer)]
-  G[Grafana]
-  MB[Metabase]
-  U[Remote admin]
-  WG[WireGuard]
-  SSH[SSH on private LAN]
-  H[Ubuntu Server<br/>Lenovo Tiny]
+  subgraph Sources
+    direction LR
+    E["ESP32"]
+    A["Energinet API"]
+  end
+
+  subgraph Ingestion and Warehouse
+    direction LR
+    M[("Mosquitto")]
+    I["Ingestion jobs"]
+    B[("PostgreSQL<br/>Raw layer")]
+    TR["Raw -> Enriched transforms"]
+    S[("PostgreSQL<br/>Enriched layer")]
+  end
+
+  subgraph Serving and BI
+    direction LR
+    TC["Enriched -> Curated modeling"]
+    G1[("PostgreSQL<br/>Curated layer")]
+    TS["Curated -> Semantic serving"]
+    SV[("PostgreSQL<br/>Semantic/Serving views")]
+    G["Grafana"]
+    MB["Metabase"]
+  end
+
+  subgraph Legend
+    direction LR
+    L1["Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action"]
+  end
+
 
   E -->|MQTT| M
   A -->|HTTP pull| I
-  M --> I
-  I --> B
-  B --> T
-  T --> S
-  S --> G1
-  G1 --> G
-  G1 --> MB
+  M -->|subscribe/read| I
+  I -->|upsert raw| B
+  B -->|SQL transform| TR
+  TR -->|standardize| S
+  S -->|modeling input| TC
+  TC -->|star schema build| G1
+  G1 -->|semantic prep| TS
+  TS -->|create views| SV
+  SV -->|query| G
+  SV -->|query| MB
   U -->|WireGuard VPN| WG
-  WG --> SSH
-  SSH --> H
+  WG -->|private tunnel| SSH
+  SSH -->|admin session| H

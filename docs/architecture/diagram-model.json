@@ -1,41 +1,69 @@
 {
   "systemArchitecture": {
-    "direction": "LR",
+    "direction": "TB",
     "subgraphs": [
       {
+        "name": "Ops access",
+        "direction": "TB",
+        "nodes": ["U", "WG", "SSH", "H"]
+      },
+      {
         "name": "Sources",
+        "direction": "LR",
         "nodes": ["E", "A"]
+      },
+      {
+        "name": "Ingestion and Warehouse",
+        "direction": "LR",
+        "nodes": ["M", "I", "B", "TR", "S"]
+      },
+      {
+        "name": "Serving and BI",
+        "direction": "LR",
+        "nodes": ["TC", "G1", "TS", "SV", "G", "MB"]
+      },
+      {
+        "name": "Legend",
+        "direction": "LR",
+        "nodes": ["L1"]
       }
     ],
     "nodes": [
-      { "id": "E", "label": "ESP32 devices", "shape": "rect" },
-      { "id": "A", "label": "Public APIs<br/>Energinet", "shape": "rect" },
+      { "id": "E", "label": "ESP32", "shape": "rect" },
+      { "id": "A", "label": "Energinet API", "shape": "rect" },
       { "id": "M", "label": "Mosquitto", "shape": "db" },
       { "id": "I", "label": "Ingestion jobs", "shape": "rect" },
       { "id": "B", "label": "PostgreSQL<br/>Raw layer", "shape": "db" },
-      { "id": "T", "label": "Transform jobs", "shape": "rect" },
+      { "id": "TR", "label": "Raw -> Enriched transforms", "shape": "rect" },
       { "id": "S", "label": "PostgreSQL<br/>Enriched layer", "shape": "db" },
+      { "id": "TC", "label": "Enriched -> Curated modeling", "shape": "rect" },
       { "id": "G1", "label": "PostgreSQL<br/>Curated layer", "shape": "db" },
+      { "id": "TS", "label": "Curated -> Semantic serving", "shape": "rect" },
+      { "id": "SV", "label": "PostgreSQL<br/>Semantic/Serving views", "shape": "db" },
       { "id": "G", "label": "Grafana", "shape": "rect" },
       { "id": "MB", "label": "Metabase", "shape": "rect" },
       { "id": "U", "label": "Remote admin", "shape": "rect" },
       { "id": "WG", "label": "WireGuard", "shape": "rect" },
       { "id": "SSH", "label": "SSH on private LAN", "shape": "rect" },
-      { "id": "H", "label": "Ubuntu Server<br/>Lenovo Tiny", "shape": "rect" }
+      { "id": "H", "label": "Ubuntu Server<br/>Lenovo Tiny", "shape": "rect" },
+      { "id": "L1", "label": "Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action", "shape": "rect" }
     ],
     "edges": [
       ["E", "M", "MQTT"],
       ["A", "I", "HTTP pull"],
-      ["M", "I"],
-      ["I", "B"],
-      ["B", "T"],
-      ["T", "S"],
-      ["S", "G1"],
-      ["G1", "G"],
-      ["G1", "MB"],
+      ["M", "I", "subscribe/read"],
+      ["I", "B", "upsert raw"],
+      ["B", "TR", "SQL transform"],
+      ["TR", "S", "standardize"],
+      ["S", "TC", "modeling input"],
+      ["TC", "G1", "star schema build"],
+      ["G1", "TS", "semantic prep"],
+      ["TS", "SV", "create views"],
+      ["SV", "G", "query"],
+      ["SV", "MB", "query"],
       ["U", "WG", "WireGuard VPN"],
-      ["WG", "SSH"],
-      ["SSH", "H"]
+      ["WG", "SSH", "private tunnel"],
+      ["SSH", "H", "admin session"]
     ]
   },
   "delivery": {
@@ -45,12 +73,18 @@
       { "id": "A2", "title": "Postgres schemas", "storyPoints": 3, "status": "done", "dependsOn": ["A1"] },
       { "id": "B1", "title": "API ingestion", "storyPoints": 5, "status": "in_progress", "dependsOn": ["A2"] },
       { "id": "B2", "title": "MQTT ingestion", "storyPoints": 8, "status": "done", "dependsOn": ["A2"] },
-      { "id": "C1", "title": "Curated transforms", "storyPoints": 3, "status": "backlog", "dependsOn": ["B1", "B2"] },
-      { "id": "D1", "title": "Grafana dashboards", "storyPoints": 5, "status": "backlog", "dependsOn": ["C1"] },
-      { "id": "D2", "title": "Metabase showcase", "storyPoints": 3, "status": "backlog", "dependsOn": ["C1"] },
+      { "id": "B3", "title": "DB migration flow", "storyPoints": 5, "status": "backlog", "dependsOn": ["A2"] },
+      { "id": "C1", "title": "Enriched standardization", "storyPoints": 3, "status": "backlog", "dependsOn": ["B1", "B2"] },
+      { "id": "C2", "title": "Curated star schema build", "storyPoints": 5, "status": "backlog", "dependsOn": ["C1"] },
+      { "id": "C3", "title": "Semantic serving views", "storyPoints": 3, "status": "backlog", "dependsOn": ["C2"] },
+      { "id": "C4", "title": "MQTT topic and payload contract", "storyPoints": 3, "status": "backlog", "dependsOn": ["B2"] },
+      { "id": "C5", "title": "MQTT replay and dead-letter strategy", "storyPoints": 5, "status": "backlog", "dependsOn": ["C4"] },
+      { "id": "D1", "title": "Grafana dashboards", "storyPoints": 5, "status": "backlog", "dependsOn": ["C3"] },
+      { "id": "D2", "title": "Metabase showcase", "storyPoints": 3, "status": "backlog", "dependsOn": ["C3"] },
+      { "id": "D3", "title": "Data quality dashboard", "storyPoints": 5, "status": "backlog", "dependsOn": ["C3", "V2"] },
       { "id": "E1", "title": "Ops monitoring", "storyPoints": 5, "status": "backlog", "dependsOn": ["D1"] },
       { "id": "F1", "title": "Project demo", "storyPoints": 3, "status": "backlog", "dependsOn": ["D2"] },
-      { "id": "V1", "title": "Local smoke test gate", "storyPoints": 3, "status": "in_progress", "dependsOn": ["C1", "D1"] },
+      { "id": "V1", "title": "Local smoke test gate", "storyPoints": 3, "status": "in_progress", "dependsOn": ["C3", "D1"] },
       { "id": "V2", "title": "Data integrity gate", "storyPoints": 3, "status": "backlog", "dependsOn": ["V1"] },
       { "id": "V3", "title": "Backup and restore drill", "storyPoints": 5, "status": "backlog", "dependsOn": ["V2"] },
       { "id": "V4", "title": "Cross-machine parity test", "storyPoints": 5, "status": "backlog", "dependsOn": ["V3"] },
@@ -58,7 +92,7 @@
       { "id": "S1", "title": "Local secrets baseline", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
       { "id": "S2", "title": "DB password rotation", "storyPoints": 2, "status": "done", "dependsOn": ["S1", "A2"] },
       { "id": "N1", "title": "Verify source numeric formats", "storyPoints": 2, "status": "backlog", "dependsOn": ["B1"] },
-      { "id": "N2", "title": "Define project numeric standard", "storyPoints": 3, "status": "backlog", "dependsOn": ["N1", "D1"] },
+      { "id": "N2", "title": "Define project numeric standard", "storyPoints": 3, "status": "backlog", "dependsOn": ["N1", "C3", "D1"] },
       { "id": "H1", "title": "WireGuard + SSH hardening", "storyPoints": 8, "status": "backlog", "dependsOn": ["G1"] },
       { "id": "H2", "title": "Secrets hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["S2", "T3"] },
       { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },

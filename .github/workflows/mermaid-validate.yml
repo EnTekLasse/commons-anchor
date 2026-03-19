@@ -25,6 +25,14 @@ jobs:
       - name: Check generated Mermaid artifacts are in sync
         run: python scripts/generate_mermaid_from_model.py --check
 
+      - name: Validate Mermaid diagram artifacts
+        run: |
+          for src in docs/architecture/diagrams/*.mmd; do
+            out="${src%.mmd}.svg"
+            echo "Validating $src"
+            mmdc -i "$src" -o "$out"
+          done
+
       - name: Validate Mermaid blocks in README
         run: |
           awk '

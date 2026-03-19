@@ -42,37 +42,61 @@ System architecture:
 <!-- AUTO_SYSTEMARCH_START -->
 ```mermaid
 %% AUTO-GENERATED FROM docs/architecture/diagram-model.json
-flowchart LR
-  subgraph Sources
-    E[ESP32 devices]
-    A[Public APIs<br/>Energinet]
+flowchart TB
+  subgraph Ops access
+    direction TB
+    U["Remote admin"]
+    WG["WireGuard"]
+    SSH["SSH on private LAN"]
+    H["Ubuntu Server<br/>Lenovo Tiny"]
   end
 
-  M[(Mosquitto)]
-  I[Ingestion jobs]
-  B[(PostgreSQL<br/>Raw layer)]
-  T[Transform jobs]
-  S[(PostgreSQL<br/>Enriched layer)]
-  G1[(PostgreSQL<br/>Curated layer)]
-  G[Grafana]
-  MB[Metabase]
-  U[Remote admin]
-  WG[WireGuard]
-  SSH[SSH on private LAN]
-  H[Ubuntu Server<br/>Lenovo Tiny]
+  subgraph Sources
+    direction LR
+    E["ESP32"]
+    A["Energinet API"]
+  end
+
+  subgraph Ingestion and Warehouse
+    direction LR
+    M[("Mosquitto")]
+    I["Ingestion jobs"]
+    B[("PostgreSQL<br/>Raw layer")]
+    TR["Raw -> Enriched transforms"]
+    S[("PostgreSQL<br/>Enriched layer")]
+  end
+
+  subgraph Serving and BI
+    direction LR
+    TC["Enriched -> Curated modeling"]
+    G1[("PostgreSQL<br/>Curated layer")]
+    TS["Curated -> Semantic serving"]
+    SV[("PostgreSQL<br/>Semantic/Serving views")]
+    G["Grafana"]
+    MB["Metabase"]
+  end
+
+  subgraph Legend
+    direction LR
+    L1["Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action"]
+  end
+
 
   E -->|MQTT| M
   A -->|HTTP pull| I
-  M --> I
-  I --> B
-  B --> T
-  T --> S
-  S --> G1
-  G1 --> G
-  G1 --> MB
+  M -->|subscribe/read| I
+  I -->|upsert raw| B
+  B -->|SQL transform| TR
+  TR -->|standardize| S
+  S -->|modeling input| TC
+  TC -->|star schema build| G1
+  G1 -->|semantic prep| TS
+  TS -->|create views| SV
+  SV -->|query| G
+  SV -->|query| MB
   U -->|WireGuard VPN| WG
-  WG --> SSH
-  SSH --> H
+  WG -->|private tunnel| SSH
+  SSH -->|admin session| H
 ```
 <!-- AUTO_SYSTEMARCH_END -->
 
@@ -83,11 +107,23 @@ Project kanban:
 %% AUTO-GENERATED FROM docs/architecture/diagram-model.json
 kanban
   Backlog
-    [3 SP - Curated transforms]
+    [5 SP - DB migration flow]
+
+    [3 SP - Enriched standardization]
+
+    [5 SP - Curated star schema build]
+
+    [3 SP - Semantic serving views]
+
+    [3 SP - MQTT topic and payload contract]
+
+    [5 SP - MQTT replay and dead-letter strategy]
 
     [5 SP - Grafana dashboards]
 
     [3 SP - Metabase showcase]
+
+    [5 SP - Data quality dashboard]
 
     [5 SP - Ops monitoring]
 
@@ -145,9 +181,15 @@ flowchart TD
   A2[Node A2<br/>Postgres schemas<br/>3 SP]
   B1[Node B1<br/>API ingestion<br/>5 SP]
   B2[Node B2<br/>MQTT ingestion<br/>8 SP]
-  C1[Node C1<br/>Curated transforms<br/>3 SP]
+  B3[Node B3<br/>DB migration flow<br/>5 SP]
+  C1[Node C1<br/>Enriched standardization<br/>3 SP]
+  C2[Node C2<br/>Curated star schema build<br/>5 SP]
+  C3[Node C3<br/>Semantic serving views<br/>3 SP]
+  C4[Node C4<br/>MQTT topic and payload contract<br/>3 SP]
+  C5[Node C5<br/>MQTT replay and dead-letter strategy<br/>5 SP]
   D1[Node D1<br/>Grafana dashboards<br/>5 SP]
   D2[Node D2<br/>Metabase showcase<br/>3 SP]
+  D3[Node D3<br/>Data quality dashboard<br/>5 SP]
   E1[Node E1<br/>Ops monitoring<br/>5 SP]
   F1[Node F1<br/>Project demo<br/>3 SP]
   V1[Node V1<br/>Local smoke test gate<br/>3 SP]
@@ -169,13 +211,20 @@ flowchart TD
   A1 --> A2
   A2 --> B1
   A2 --> B2
+  A2 --> B3
   B1 --> C1
   B2 --> C1
-  C1 --> D1
-  C1 --> D2
+  C1 --> C2
+  C2 --> C3
+  B2 --> C4
+  C4 --> C5
+  C3 --> D1
+  C3 --> D2
+  C3 --> D3
+  V2 --> D3
   D1 --> E1
   D2 --> F1
-  C1 --> V1
+  C3 --> V1
   D1 --> V1
   V1 --> V2
   V2 --> V3
@@ -188,6 +237,7 @@ flowchart TD
   A2 --> S2
   B1 --> N1
   N1 --> N2
+  C3 --> N2
   D1 --> N2
   G1 --> H1
   S2 --> H2
@@ -206,9 +256,15 @@ flowchart TD
   class A2 done
   class B1 inProgress
   class B2 done
+  class B3 backlog
   class C1 backlog
+  class C2 backlog
+  class C3 backlog
+  class C4 backlog
+  class C5 backlog
   class D1 backlog
   class D2 backlog
+  class D3 backlog
   class E1 backlog
   class F1 backlog
   class V1 inProgress
@@ -243,6 +299,9 @@ Terminology glossary:
 Toolchain definition:
 - [docs/toolchain.md](docs/toolchain.md)
 
+Data warehouse strategy:
+- [docs/architecture/data-warehouse-strategy.md](docs/architecture/data-warehouse-strategy.md)
+
 Local secrets baseline:
 - [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md)
 
@@ -264,10 +323,15 @@ check-sql-syntax --root path/to/sql
 
 ## Data architecture (layered model)
 
-Target warehouse model is Raw/Enriched/Curated:
+Target warehouse model is Raw/Enriched/Curated/Serving:
 - Raw: raw, immutable ingestion from APIs and MQTT
 - Enriched: cleaned, standardized, quality-checked datasets
 - Curated: analytics-ready marts for dashboards and ML features
+- Serving: semantic views for stable BI consumption (Grafana/Metabase)
+
+Modeling direction:
+- Raw and Enriched are source-oriented (each source has its own grouping/module).
+- Curated is business-oriented and modeled as star schemas (facts and dimensions).
 
 MVP schema mapping (conceptual -> physical):
 - Raw -> `staging`
@@ -275,6 +339,8 @@ MVP schema mapping (conceptual -> physical):
 - Enriched -> planned as a dedicated schema in a later phase
 
 This keeps the conceptual model stable while the physical schema evolves incrementally.
+
+See the full strategy in [docs/architecture/data-warehouse-strategy.md](docs/architecture/data-warehouse-strategy.md).
 
 ## Terminology (short glossary)
 

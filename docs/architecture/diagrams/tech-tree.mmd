@@ -4,9 +4,15 @@ flowchart TD
   A2[Node A2<br/>Postgres schemas<br/>3 SP]
   B1[Node B1<br/>API ingestion<br/>5 SP]
   B2[Node B2<br/>MQTT ingestion<br/>8 SP]
-  C1[Node C1<br/>Curated transforms<br/>3 SP]
+  B3[Node B3<br/>DB migration flow<br/>5 SP]
+  C1[Node C1<br/>Enriched standardization<br/>3 SP]
+  C2[Node C2<br/>Curated star schema build<br/>5 SP]
+  C3[Node C3<br/>Semantic serving views<br/>3 SP]
+  C4[Node C4<br/>MQTT topic and payload contract<br/>3 SP]
+  C5[Node C5<br/>MQTT replay and dead-letter strategy<br/>5 SP]
   D1[Node D1<br/>Grafana dashboards<br/>5 SP]
   D2[Node D2<br/>Metabase showcase<br/>3 SP]
+  D3[Node D3<br/>Data quality dashboard<br/>5 SP]
   E1[Node E1<br/>Ops monitoring<br/>5 SP]
   F1[Node F1<br/>Project demo<br/>3 SP]
   V1[Node V1<br/>Local smoke test gate<br/>3 SP]
@@ -28,13 +34,20 @@ flowchart TD
   A1 --> A2
   A2 --> B1
   A2 --> B2
+  A2 --> B3
   B1 --> C1
   B2 --> C1
-  C1 --> D1
-  C1 --> D2
+  C1 --> C2
+  C2 --> C3
+  B2 --> C4
+  C4 --> C5
+  C3 --> D1
+  C3 --> D2
+  C3 --> D3
+  V2 --> D3
   D1 --> E1
   D2 --> F1
-  C1 --> V1
+  C3 --> V1
   D1 --> V1
   V1 --> V2
   V2 --> V3
@@ -47,6 +60,7 @@ flowchart TD
   A2 --> S2
   B1 --> N1
   N1 --> N2
+  C3 --> N2
   D1 --> N2
   G1 --> H1
   S2 --> H2
@@ -65,9 +79,15 @@ flowchart TD
   class A2 done
   class B1 inProgress
   class B2 done
+  class B3 backlog
   class C1 backlog
+  class C2 backlog
+  class C3 backlog
+  class C4 backlog
+  class C5 backlog
   class D1 backlog
   class D2 backlog
+  class D3 backlog
   class E1 backlog
   class F1 backlog
   class V1 inProgress
