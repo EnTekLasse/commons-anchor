@@ -30,6 +30,45 @@ This repository is built as a practical showcase of:
 
 The long-term target runtime is a used Lenovo Tiny running Ubuntu Server, with a fully self-hosted stack.
 
+## Contributor setup (5 min)
+
+Use this when a new person clones the repository and wants a working local setup quickly.
+
+1. Create local env from template:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+2. Create local secret files (never committed):
+
+```powershell
+New-Item -ItemType Directory -Force infra/secrets | Out-Null
+Set-Content infra/secrets/postgres_password.secret "<strong-postgres-password>"
+Set-Content infra/secrets/grafana_admin_password.secret "<strong-grafana-password>"
+```
+
+3. Start core services:
+
+```powershell
+docker compose up -d
+```
+
+4. Verify secrets are ignored:
+
+```powershell
+git check-ignore -v .env
+git check-ignore -v infra/secrets/postgres_password.secret
+git check-ignore -v wg-client.conf
+```
+
+5. Open Grafana and verify login:
+- URL: http://localhost:3000
+- User: value of `GF_SECURITY_ADMIN_USER` in `.env`
+- Password: value stored in `infra/secrets/grafana_admin_password.secret`
+
+For the full security/reproducibility contract, see [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md).
+
 ## Motivation
 
 The project is intentionally designed as a long-term learning system.
@@ -141,8 +180,6 @@ kanban
 
     [3 SP - Define project numeric standard]
 
-    [8 SP - WireGuard + SSH hardening]
-
     [3 SP - Secrets hardening pass]
 
     [3 SP - Toolchain automation baseline]
@@ -155,6 +192,8 @@ kanban
     [5 SP - API ingestion]
 
     [3 SP - Local smoke test gate]
+
+    [8 SP - WireGuard + SSH hardening prep]
 
   Done
     [5 SP - Docker baseline]
@@ -201,7 +240,7 @@ flowchart TD
   S2[Node S2<br/>DB password rotation<br/>2 SP]
   N1[Node N1<br/>Verify source numeric formats<br/>2 SP]
   N2[Node N2<br/>Define project numeric standard<br/>3 SP]
-  H1[Node H1<br/>WireGuard + SSH hardening<br/>8 SP]
+  H1[Node H1<br/>WireGuard + SSH hardening prep<br/>8 SP]
   H2[Node H2<br/>Secrets hardening pass<br/>3 SP]
   T1[Node T1<br/>Toolchain baseline document<br/>2 SP]
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
@@ -239,7 +278,8 @@ flowchart TD
   N1 --> N2
   C3 --> N2
   D1 --> N2
-  G1 --> H1
+  S2 --> H1
+  T3 --> H1
   S2 --> H2
   T3 --> H2
   A1 --> T1
@@ -276,7 +316,7 @@ flowchart TD
   class S2 done
   class N1 backlog
   class N2 backlog
-  class H1 backlog
+  class H1 inProgress
   class H2 backlog
   class T1 done
   class T2 backlog
@@ -406,6 +446,8 @@ Windows note (recommended):
   Set-Content infra/secrets/postgres_password.secret "<strong-postgres-password>"
   Set-Content infra/secrets/grafana_admin_password.secret "<strong-grafana-password>"
   ```
+
+  For contributor onboarding and the full local secrets contract, see [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md).
 
 3. Update non-secret settings in .env if needed
 

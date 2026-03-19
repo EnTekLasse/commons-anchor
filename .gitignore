@@ -3,6 +3,15 @@
 .env.backup
 infra/secrets/*.txt
 infra/secrets/*.secret
+# WireGuard and key material (local only)
+wg*.conf
+*.key
+*.pem
+*.p12
+*.pfx
+*.ovpn
+id_rsa
+id_ed25519
 *.log
 .DS_Store
 .venv/

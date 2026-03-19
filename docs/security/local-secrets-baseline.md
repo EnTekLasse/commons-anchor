@@ -9,10 +9,50 @@ This project uses local Docker secret files for passwords and `.env` for non-sec
 
 ## Rules
 1. Keep real passwords in `infra/secrets/*.secret` only.
-2. Never commit `infra/secrets/*.secret` or `.env`.
-3. Keep placeholders and file paths in `.env.example` only.
-4. Store real secret values in a password manager as backup.
-5. Keep service bind addresses on `127.0.0.1` unless LAN access is explicitly needed.
+2. Treat WireGuard private keys and client configs as secrets.
+3. Never commit `infra/secrets/*.secret`, `.env`, or WireGuard key/config material.
+4. Keep placeholders and file paths in `.env.example` only.
+5. Store real secret values in a password manager as backup.
+6. Keep service bind addresses on `127.0.0.1` unless LAN access is explicitly needed.
+
+## What another developer must define locally
+
+Minimum required local files:
+
+- `.env` (copied from `.env.example` and adjusted per machine)
+- `infra/secrets/postgres_password.secret`
+- `infra/secrets/grafana_admin_password.secret`
+
+Optional but security-critical local files when WireGuard is used:
+
+- WireGuard private key files (for example `*.key`)
+- WireGuard client config exports (for example `wg*.conf`)
+
+Configuration contract:
+
+| Item | Tracked in git | Local per developer | Notes |
+| --- | --- | --- | --- |
+| `.env.example` | Yes | No | Template only, no real secrets |
+| `.env` | No | Yes | Non-secret machine settings and secret file paths |
+| `infra/secrets/postgres_password.secret` | No | Yes | Real password value |
+| `infra/secrets/grafana_admin_password.secret` | No | Yes | Real password value |
+| `wg*.conf` (WireGuard client config) | No | Yes | Contains private key, keep in password manager |
+| `*.key` (WireGuard private key files) | No | Yes | Never leave working directory |
+
+Password requirements (recommended minimum):
+
+- At least 20 characters
+- Randomly generated
+- Stored in a password manager
+- Not reused across services
+
+Onboarding checklist for a new contributor:
+
+1. Copy `.env.example` to `.env`.
+2. Create both `.secret` files with strong local values.
+3. Start stack with `docker compose up -d`.
+4. Verify services are healthy and login works for Grafana.
+5. Confirm git does not show `.env` or `infra/secrets/*.secret` in status.
 
 ## Setup on a new machine
 1. Copy `.env.example` to `.env`.
