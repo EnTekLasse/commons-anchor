@@ -27,14 +27,16 @@ jobs:
 
       - name: Validate Mermaid diagram artifacts
         run: |
+          PUPPETEER_CFG=".github/mermaid-puppeteer-config.json"
           for src in docs/architecture/diagrams/*.mmd; do
             out="${src%.mmd}.svg"
             echo "Validating $src"
-            mmdc -i "$src" -o "$out"
+            mmdc -i "$src" -o "$out" --puppeteerConfigFile "$PUPPETEER_CFG"
           done
 
       - name: Validate Mermaid blocks in README
         run: |
+          PUPPETEER_CFG=".github/mermaid-puppeteer-config.json"
           awk '
             BEGIN { in_block=0; n=0 }
             /^```mermaid/ {
@@ -61,5 +63,5 @@ jobs:
           for src in /tmp/readme-diagram-*.mmd; do
             out="${src%.mmd}.svg"
             echo "Validating $src"
-            mmdc -i "$src" -o "$out"
+            mmdc -i "$src" -o "$out" --puppeteerConfigFile "$PUPPETEER_CFG"
           done
