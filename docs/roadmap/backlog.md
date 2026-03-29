@@ -55,6 +55,14 @@ Backlog policy:
 - T3: Toolchain hardening pass (3)
 - HW1: Hardware bring-up baseline (3)
 
+## ML Platform Foundation
+- M1: ML data readiness baseline (3)
+- M2: Feature pipeline template (5)
+- M3: Model registry and versioning baseline (3)
+- M4: Training and evaluation workflow baseline (5)
+- M5: Inference serving contract (3)
+- M6: ML monitoring baseline (3)
+
 ## Parking Lot (Not Yet in Kanban/Tech-Tree)
 - P1: Add branching strategy and PR template (3)
 - P2: Add ADR template and first architecture decisions (2)
@@ -75,3 +83,5 @@ Backlog policy:
 - Sprint 4 (16 SP): V2, V3, N1b, N2, T2
 - Sprint 5 (18 SP): V4, E1, G1
 - Sprint 6 (15 SP): H1, H2, S2, T3
+- Sprint 7 (19 SP): M1, M2, M3, M4, M5
+- Sprint 8 (3 SP): M6

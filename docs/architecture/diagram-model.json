@@ -23,6 +23,11 @@
         "nodes": ["TC", "G1", "TS", "SV", "G", "MB"]
       },
       {
+        "name": "ML and ModelOps",
+        "direction": "LR",
+        "nodes": ["FM", "PY", "MR", "MO"]
+      },
+      {
         "name": "Legend",
         "direction": "LR",
         "nodes": ["L1"]
@@ -42,23 +47,33 @@
       { "id": "SV", "label": "PostgreSQL<br/>Semantic/Serving views", "shape": "db" },
       { "id": "G", "label": "Grafana", "shape": "rect" },
       { "id": "MB", "label": "Metabase", "shape": "rect" },
+      { "id": "FM", "label": "PostgreSQL<br/>ML Feature layer", "shape": "db" },
+      { "id": "PY", "label": "Python ML pipelines", "shape": "rect" },
+      { "id": "MR", "label": "PostgreSQL<br/>ML Results layer", "shape": "db" },
+      { "id": "MO", "label": "Model registry + metadata", "shape": "rect" },
       { "id": "U", "label": "Remote admin", "shape": "rect" },
       { "id": "WG", "label": "WireGuard", "shape": "rect" },
       { "id": "SSH", "label": "SSH on private LAN", "shape": "rect" },
       { "id": "H", "label": "Ubuntu Server<br/>Lenovo Tiny", "shape": "rect" },
-      { "id": "L1", "label": "Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action", "shape": "rect" }
+      { "id": "L1", "label": "Legend:<br/>solid arrows = data/access flow<br/>feature/training flow = Enriched/Curated -> ML Feature -> Python<br/>serving flow = ML Results/Curated -> Semantic views<br/>edge labels = protocol/action", "shape": "rect" }
     ],
     "edges": [
       ["E", "M", "MQTT"],
-      ["A", "I", "HTTP pull"],
-      ["M", "I", "subscribe/read"],
-      ["I", "B", "upsert raw"],
-      ["B", "TR", "SQL transform"],
+      ["A", "I", "API pull"],
+      ["M", "I", "MQTT sub"],
+      ["I", "B", "raw upsert"],
+      ["B", "TR", "SQL xform"],
       ["TR", "S", "standardize"],
-      ["S", "TC", "modeling input"],
-      ["TC", "G1", "star schema build"],
+      ["S", "TC", "model input"],
+      ["TC", "G1", "star build"],
+      ["S", "FM", "feature input"],
+      ["G1", "FM", "feature input"],
+      ["FM", "PY", "train/infer"],
+      ["PY", "MR", "pred + metrics"],
+      ["PY", "MO", "model metadata"],
+      ["MR", "SV", "champion output"],
       ["G1", "TS", "semantic prep"],
-      ["TS", "SV", "create views"],
+      ["TS", "SV", "build views"],
       ["SV", "G", "query"],
       ["SV", "MB", "query"],
       ["U", "WG", "WireGuard VPN"],
@@ -99,7 +114,13 @@
       { "id": "T1", "title": "Toolchain baseline document", "storyPoints": 2, "status": "done", "dependsOn": ["A1"] },
       { "id": "T2", "title": "Toolchain automation baseline", "storyPoints": 3, "status": "done", "dependsOn": ["T1", "A2"] },
       { "id": "T3", "title": "Toolchain hardening pass", "storyPoints": 3, "status": "backlog", "dependsOn": ["T2"] },
-      { "id": "HW1", "title": "Hardware bring-up baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["B2", "T1"] }
+      { "id": "HW1", "title": "Hardware bring-up baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["B2", "T1"] },
+      { "id": "M1", "title": "ML data readiness baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["C3", "V2"] },
+      { "id": "M2", "title": "Feature pipeline template", "storyPoints": 5, "status": "backlog", "dependsOn": ["M1"] },
+      { "id": "M3", "title": "Model registry and versioning baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["M1", "T3"] },
+      { "id": "M4", "title": "Training and evaluation workflow baseline", "storyPoints": 5, "status": "backlog", "dependsOn": ["M2", "M3"] },
+      { "id": "M5", "title": "Inference serving contract", "storyPoints": 3, "status": "backlog", "dependsOn": ["M4", "C3"] },
+      { "id": "M6", "title": "ML monitoring baseline", "storyPoints": 3, "status": "backlog", "dependsOn": ["M5", "E1"] }
     ]
   }
 }

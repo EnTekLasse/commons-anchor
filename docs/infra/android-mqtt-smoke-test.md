@@ -21,6 +21,14 @@ Flow under test:
 docker compose up -d --build postgres mqtt mqtt-ingest
 ```
 
+Optional guided helper on Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/testing/manual_mqtt_check.ps1
+```
+
+This helper prints the host/topic/payload, shows `Send MQTT now`, then waits and confirms whether a new row arrives in `staging.mqtt_raw`.
+
 ## 2) Find laptop Wi-Fi IP
 
 ```powershell

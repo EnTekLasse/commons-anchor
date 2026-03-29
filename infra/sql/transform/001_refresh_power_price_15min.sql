@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS mart.power_price_hourly;
-
 INSERT INTO mart.power_price_15min (
     ts_utc,
     area,

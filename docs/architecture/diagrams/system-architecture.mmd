@@ -33,22 +33,36 @@ flowchart TB
     MB["Metabase"]
   end
 
+  subgraph ML and ModelOps
+    direction LR
+    FM[("PostgreSQL<br/>ML Feature layer")]
+    PY["Python ML pipelines"]
+    MR[("PostgreSQL<br/>ML Results layer")]
+    MO["Model registry + metadata"]
+  end
+
   subgraph Legend
     direction LR
-    L1["Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action"]
+    L1["Legend:<br/>solid arrows = data/access flow<br/>feature/training flow = Enriched/Curated -> ML Feature -> Python<br/>serving flow = ML Results/Curated -> Semantic views<br/>edge labels = protocol/action"]
   end
 
 
   E -->|MQTT| M
-  A -->|HTTP pull| I
-  M -->|subscribe/read| I
-  I -->|upsert raw| B
-  B -->|SQL transform| TR
+  A -->|API pull| I
+  M -->|MQTT sub| I
+  I -->|raw upsert| B
+  B -->|SQL xform| TR
   TR -->|standardize| S
-  S -->|modeling input| TC
-  TC -->|star schema build| G1
+  S -->|model input| TC
+  TC -->|star build| G1
+  S -->|feature input| FM
+  G1 -->|feature input| FM
+  FM -->|train/infer| PY
+  PY -->|pred + metrics| MR
+  PY -->|model metadata| MO
+  MR -->|champion output| SV
   G1 -->|semantic prep| TS
-  TS -->|create views| SV
+  TS -->|build views| SV
   SV -->|query| G
   SV -->|query| MB
   U -->|WireGuard VPN| WG

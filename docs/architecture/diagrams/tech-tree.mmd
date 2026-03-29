@@ -31,6 +31,12 @@ flowchart TD
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
   HW1[Node HW1<br/>Hardware bring-up baseline<br/>3 SP]
+  M1[Node M1<br/>ML data readiness baseline<br/>3 SP]
+  M2[Node M2<br/>Feature pipeline template<br/>5 SP]
+  M3[Node M3<br/>Model registry and versioning baseline<br/>3 SP]
+  M4[Node M4<br/>Training and evaluation workflow baseline<br/>5 SP]
+  M5[Node M5<br/>Inference serving contract<br/>3 SP]
+  M6[Node M6<br/>ML monitoring baseline<br/>3 SP]
 
   A1 --> A2
   A2 --> B1
@@ -75,6 +81,17 @@ flowchart TD
   T2 --> T3
   B2 --> HW1
   T1 --> HW1
+  C3 --> M1
+  V2 --> M1
+  M1 --> M2
+  M1 --> M3
+  T3 --> M3
+  M2 --> M4
+  M3 --> M4
+  M4 --> M5
+  C3 --> M5
+  M5 --> M6
+  E1 --> M6
 
   classDef done fill:#d8f5d0,stroke:#2f7a2f,stroke-width:1px,color:#1c311c
   classDef inProgress fill:#fff1c7,stroke:#8a6a00,stroke-width:1px,color:#3a2a00
@@ -110,3 +127,9 @@ flowchart TD
   class T2 done
   class T3 backlog
   class HW1 backlog
+  class M1 backlog
+  class M2 backlog
+  class M3 backlog
+  class M4 backlog
+  class M5 backlog
+  class M6 backlog

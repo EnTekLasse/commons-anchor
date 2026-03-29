@@ -7,6 +7,7 @@ This project demonstrates end-to-end data engineering and applied data science o
 - IoT ingestion from ESP32 via MQTT
 - Public API ingestion (for example Energinet data)
 - Dashboard delivery for analysis and operations
+- ML-ready MLOps foundation for future model training and deployment
 - Secure remote administration with VPN and SSH
 
 ## Project intent
@@ -19,6 +20,11 @@ Primary project value order:
 1. Learning progression and engineering discipline
 2. Business and decision value
 3. Climate and citizen-science relevance
+
+ML direction (platform-first):
+- Build a use-case-agnostic MLOps capability on top of warehouse data.
+- Keep model lifecycle reproducible: feature prep, training, evaluation, deployment, monitoring.
+- Select concrete ML use cases in later phases (for example forecasting, anomaly detection, or control support).
 
 ## Professional summary
 
@@ -74,6 +80,40 @@ For the full security/reproducibility contract, see [docs/security/local-secrets
 The project is intentionally designed as a long-term learning system.
 The tech-tree is not only planning documentation, but a personal motivation tool to keep progress measurable and visible.
 
+## ML dataflow (short)
+
+The ML setup is intentionally split from BI serving:
+- Feature/training path: Enriched + Curated -> ML Feature layer -> Python ML pipelines.
+- Model output path: Python ML pipelines -> ML Results layer.
+- Consumption path: champion predictions and model quality summaries are exposed through Semantic/Serving views for Grafana and Metabase.
+
+This keeps experimentation and model versioning in the ML path while keeping BI-facing outputs stable in the serving layer.
+
+## Testing workflow
+
+Windows runtime test entrypoints:
+- Preflight only: `powershell -ExecutionPolicy Bypass -File scripts/testing/ensure_docker_ready.ps1`
+- Smoke test: `powershell -ExecutionPolicy Bypass -File scripts/testing/smoke_test.ps1`
+- Full stack test: `powershell -ExecutionPolicy Bypass -File scripts/testing/full_stack_test.ps1`
+- Full stack cold start: `powershell -ExecutionPolicy Bypass -File scripts/testing/full_stack_test.ps1 -ColdStart`
+- Full stack with MQTT seed attempt: `powershell -ExecutionPolicy Bypass -File scripts/testing/full_stack_test.ps1 -SeedMqtt`
+- Full stack runtime only: `powershell -ExecutionPolicy Bypass -File scripts/testing/full_stack_test.ps1 -SkipQualityGate`
+- Linux container parity sanity: `powershell -ExecutionPolicy Bypass -File scripts/testing/linux_container_parity.ps1`
+- Parity report: `powershell -ExecutionPolicy Bypass -File scripts/testing/generate_parity_report.ps1`
+- Parity report runtime only: `powershell -ExecutionPolicy Bypass -File scripts/testing/generate_parity_report.ps1 -SkipQualityGate`
+- Stop stack: `powershell -ExecutionPolicy Bypass -File scripts/testing/stop_stack.ps1`
+- Cold-start reset: `powershell -ExecutionPolicy Bypass -File scripts/testing/stop_stack.ps1 -RemoveVolumes -RemoveOrphans -PruneUnused -StopDesktop`
+
+Linux runtime test entrypoints:
+- Preflight only: `bash scripts/testing/ensure_docker_ready.sh`
+- Smoke test: `bash scripts/testing/smoke_test.sh`
+- Full stack test: `bash scripts/testing/full_stack_test.sh`
+- Parity report: `bash scripts/testing/generate_parity_report.sh`
+- Stop stack: `bash scripts/testing/stop_stack.sh`
+
+For structure and rationale, see [docs/testing/runtime-test-structure.md](docs/testing/runtime-test-structure.md) and [tests/README.md](tests/README.md).
+For Linux host rollout readiness, see [docs/testing/lenovo-tiny-readiness-checklist.md](docs/testing/lenovo-tiny-readiness-checklist.md).
+
 ## Architecture diagrams
 
 System architecture:
@@ -115,22 +155,36 @@ flowchart TB
     MB["Metabase"]
   end
 
+  subgraph ML and ModelOps
+    direction LR
+    FM[("PostgreSQL<br/>ML Feature layer")]
+    PY["Python ML pipelines"]
+    MR[("PostgreSQL<br/>ML Results layer")]
+    MO["Model registry + metadata"]
+  end
+
   subgraph Legend
     direction LR
-    L1["Legend:<br/>solid arrows = data/access flow<br/>edge labels = protocol/action"]
+    L1["Legend:<br/>solid arrows = data/access flow<br/>feature/training flow = Enriched/Curated -> ML Feature -> Python<br/>serving flow = ML Results/Curated -> Semantic views<br/>edge labels = protocol/action"]
   end
 
 
   E -->|MQTT| M
-  A -->|HTTP pull| I
-  M -->|subscribe/read| I
-  I -->|upsert raw| B
-  B -->|SQL transform| TR
+  A -->|API pull| I
+  M -->|MQTT sub| I
+  I -->|raw upsert| B
+  B -->|SQL xform| TR
   TR -->|standardize| S
-  S -->|modeling input| TC
-  TC -->|star schema build| G1
+  S -->|model input| TC
+  TC -->|star build| G1
+  S -->|feature input| FM
+  G1 -->|feature input| FM
+  FM -->|train/infer| PY
+  PY -->|pred + metrics| MR
+  PY -->|model metadata| MO
+  MR -->|champion output| SV
   G1 -->|semantic prep| TS
-  TS -->|create views| SV
+  TS -->|build views| SV
   SV -->|query| G
   SV -->|query| MB
   U -->|WireGuard VPN| WG
@@ -185,6 +239,18 @@ kanban
     [3 SP - Toolchain hardening pass]
 
     [3 SP - Hardware bring-up baseline]
+
+    [3 SP - ML data readiness baseline]
+
+    [5 SP - Feature pipeline template]
+
+    [3 SP - Model registry and versioning baseline]
+
+    [5 SP - Training and evaluation workflow baseline]
+
+    [3 SP - Inference serving contract]
+
+    [3 SP - ML monitoring baseline]
 
   [In Progress]
     [5 SP - API ingestion]
@@ -249,6 +315,12 @@ flowchart TD
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
   HW1[Node HW1<br/>Hardware bring-up baseline<br/>3 SP]
+  M1[Node M1<br/>ML data readiness baseline<br/>3 SP]
+  M2[Node M2<br/>Feature pipeline template<br/>5 SP]
+  M3[Node M3<br/>Model registry and versioning baseline<br/>3 SP]
+  M4[Node M4<br/>Training and evaluation workflow baseline<br/>5 SP]
+  M5[Node M5<br/>Inference serving contract<br/>3 SP]
+  M6[Node M6<br/>ML monitoring baseline<br/>3 SP]
 
   A1 --> A2
   A2 --> B1
@@ -293,6 +365,17 @@ flowchart TD
   T2 --> T3
   B2 --> HW1
   T1 --> HW1
+  C3 --> M1
+  V2 --> M1
+  M1 --> M2
+  M1 --> M3
+  T3 --> M3
+  M2 --> M4
+  M3 --> M4
+  M4 --> M5
+  C3 --> M5
+  M5 --> M6
+  E1 --> M6
 
   classDef done fill:#d8f5d0,stroke:#2f7a2f,stroke-width:1px,color:#1c311c
   classDef inProgress fill:#fff1c7,stroke:#8a6a00,stroke-width:1px,color:#3a2a00
@@ -328,6 +411,12 @@ flowchart TD
   class T2 done
   class T3 backlog
   class HW1 backlog
+  class M1 backlog
+  class M2 backlog
+  class M3 backlog
+  class M4 backlog
+  class M5 backlog
+  class M6 backlog
 ```
 <!-- AUTO_TECHTREE_END -->
 
@@ -511,6 +600,18 @@ Windows note (recommended):
   Worker behavior:
   - Valid JSON + valid contract -> row inserted into `staging.mqtt_raw`
   - Invalid JSON or invalid contract -> message skipped and logged
+
+  For now, MQTT validation remains a separate path.
+  If you choose to test MQTT, do it with a phone, ESP32, or another real MQTT client that publishes to the broker.
+  Do not treat MQTT as part of the default automated full stack gate unless you deliberately want a manual/device-driven check.
+
+  Assisted manual check:
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts/testing/manual_mqtt_check.ps1
+  ```
+
+  The helper prints host/topic/payload, says `Send MQTT now`, waits for incoming rows, and then confirms how many valid MQTT rows were stored.
 
   Publish JSON telemetry to topic `ca/dev/phone01/telemetry`, then verify:
 
