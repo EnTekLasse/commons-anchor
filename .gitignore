@@ -31,3 +31,6 @@ firmware/**/.vscode/
 firmware/**/.devcontainer/
 firmware/**/.clangd
 firmware/**/COMMIT_NOTES.md
+
+# Generated local test reports
+docs/testing/parity-report-windows-laptop.md
