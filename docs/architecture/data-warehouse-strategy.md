@@ -24,6 +24,19 @@ Current physical mapping in MVP:
 - Enriched -> planned as a dedicated schema in a later phase
 - Serving -> planned as `semantic` views on top of curated star schemas
 
+
+Planned mapping:
+
+- Orchestration could be using "for-each" logic
+
+- Ingestion: .py scripts in scripts/ingest folder - ingest as raw as possible
+- Raw folder: [source]_create_tables.sql , [source]_load.sql
+- Enrich folder: [source]_create_tables.sql , [source]_enrich.sql
+- Curated folder: [domain]_star_create_tables.sql, [domain]_star_transform.sql
+- Serving folder: [usecase]_view.sql
+- ML Feature folder: [source]_create_tables.sql, [source]_generate_feature.sql
+
+
 ### Physical Organization Rules
 
 - Raw is source-oriented: each source gets its own namespace/grouping (for example API-specific and MQTT-specific areas) to keep lineage explicit.

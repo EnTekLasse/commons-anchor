@@ -75,6 +75,9 @@ Backlog policy:
 - P9: Record architecture walkthrough and demo script (3)
 - P10: Add screenshots and operational runbook (3)
 - P11: Add benchmark and cost profile section (2)
+- P12: Ingest elspotprices with EUR as well (1)
+- P13: Organize Scripts folder - ingest scripts in own subfolder. (1)
+- P14: Organize sql folder - see "Planned mapping" in data-warehouse-strategy.md
 
 ## Candidate sprint order
 - Sprint 1 (13 SP): A1, A2, B1
