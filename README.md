@@ -10,6 +10,15 @@ This project demonstrates end-to-end data engineering and applied data science o
 - ML-ready MLOps foundation for future model training and deployment
 - Secure remote administration with VPN and SSH
 
+## How to read this repository
+
+This repository is structured from the outside in:
+
+1. Start with docs/architecture to understand the anchor model
+2. Then read docs/infra to see how connectivity and access are established
+3. docs/security explains how trust, keys, and recovery are handled
+4. docs/roadmap shows what is intentionally deferred
+
 ## Project intent
 
 Primary profile:
