@@ -4,7 +4,13 @@
 infra/secrets/*.txt
 infra/secrets/*.secret
 # WireGuard and key material (local only)
+*.private
 wg*.conf
+client.conf
+infra/wireguard/*.conf
+!infra/wireguard/*.conf.example
+id_*
+authorized_keys
 *.key
 *.pem
 *.p12

@@ -9,10 +9,14 @@ Related local credential handling:
 H1 pre-hardware checklist artifact:
 - [docs/security/wireguard-h1-prehardware-checklist.md](docs/security/wireguard-h1-prehardware-checklist.md)
 
+Day-1 execution runbook:
+- [docs/security/wireguard-cx23-day1-runbook.md](docs/security/wireguard-cx23-day1-runbook.md)
+
 ## Design
-- WireGuard endpoint on home server or router
-- SSH listens on LAN only
-- Remote laptop/phone enters VPN first, then SSH to server private IP
+- WireGuard endpoint on Hetzner CX23 VPS (hub model)
+- Home network and admin clients are peers behind the hub
+- SSH to VPS is restricted to VPN addresses after tunnel validation
+- First iteration is management-only (no reverse proxy or app exposure)
 
 ## Minimal flow
 1. Connect VPN client
@@ -27,9 +31,14 @@ H1 pre-hardware checklist artifact:
 - Add MFA on cloud account if using dynamic DNS
 
 ## Open decisions
-- Host WireGuard on Ubuntu host vs container
-- Use dynamic DNS provider or fixed public IP
-- Multi-peer policy (laptop, mobile, backup device)
+- Resolved on 2026-04-01:
+	- Use a new Hetzner CX23 VPS as clean replacement for legacy setup
+	- Canonical tunnel subnet is 10.100.0.0/24
+	- Scope is WireGuard + SSH only for first iteration
+
+## Decommission note
+- Legacy endpoint and keys from earlier attempts are treated as compromised and must be rotated.
+- Client WireGuard runtime configs stay local only and are never committed.
 
 ## Pre-hardware checklist (can run now)
 

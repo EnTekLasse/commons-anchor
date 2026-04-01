@@ -12,4 +12,4 @@ COPY scripts ./scripts
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir .
 
-CMD ["python", "-m", "scripts.energidataservice_ingest"]
+CMD ["python", "-m", "scripts.ingest.energidataservice_ingest"]

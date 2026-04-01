@@ -1,0 +1,10 @@
+[Interface]
+# Client (Windows / Linux / macOS / mobile)
+PrivateKey = <CLIENT_PRIVATE_KEY>
+Address = 10.100.0.2/32
+
+[Peer]
+PublicKey = <SERVER_PUBLIC_KEY>
+Endpoint = <PUBLIC_IP_OR_DNS>:51820
+AllowedIPs = 10.100.0.1/32
+PersistentKeepalive = 25

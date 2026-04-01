@@ -1,7 +1,11 @@
 from argparse import Namespace
 from datetime import UTC, datetime
 
-from scripts.energidataservice_ingest import build_request_params, load_settings, normalize_records
+from scripts.ingest.energidataservice_ingest import (
+    build_request_params,
+    load_settings,
+    normalize_records,
+)
 
 
 def test_load_settings_defaults(monkeypatch):

@@ -2,7 +2,7 @@ from argparse import Namespace
 
 import psycopg
 import pytest
-from scripts.mqtt_ingest import (
+from scripts.ingest.mqtt_ingest import (
     DatabaseWriter,
     Settings,
     decode_payload,

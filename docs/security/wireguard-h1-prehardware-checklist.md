@@ -62,12 +62,12 @@ Procedure notes:
 - Generate:
   - Server (Ubuntu host):
     - `umask 077`
-    - `wg genkey | tee /etc/wireguard/server_private.key | wg pubkey > /etc/wireguard/server_public.key`
+    - `wg genkey | tee /etc/wireguard/wg-prod-hub-hetzner-cx23-01.private | wg pubkey > /etc/wireguard/wg-prod-hub-hetzner-cx23-01.public`
   - Peer (example):
-    - `wg genkey | tee laptop-main_private.key | wg pubkey > laptop-main_public.key`
+    - `wg genkey | tee wg-prod-peer-admin-laptop-01.private | wg pubkey > wg-prod-peer-admin-laptop-01.public`
 - Store:
   - Private keys only on the owning device/host, never in git, chat, or screenshots.
-  - Server private key path target: `/etc/wireguard/server_private.key` with `600` permissions.
+  - Hub private key path target: `/etc/wireguard/wg-prod-hub-hetzner-cx23-01.private` with `600` permissions.
   - Public keys may be stored in runbook/config inventory.
 - Rotate:
   - Planned cadence: every 180 days or immediately after suspected compromise.

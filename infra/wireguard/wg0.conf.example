@@ -1,0 +1,10 @@
+[Interface]
+# WireGuard server interface
+Address = 10.100.0.1/24
+ListenPort = 51820
+PrivateKey = <SERVER_PRIVATE_KEY>
+
+# Example peer: laptop
+[Peer]
+PublicKey = <LAPTOP_PUBLIC_KEY>
+AllowedIPs = 10.100.0.2/32
