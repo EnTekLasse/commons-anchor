@@ -1,10 +1,22 @@
 [Interface]
-# WireGuard server interface
+# WireGuard hub interface (runs on the public Hetzner VPS)
+# Tunnel subnet for all peers. Hub uses .1, peers use unique /32 addresses.
 Address = 10.100.0.1/24
+
+# UDP port exposed on the VPS firewall (UFW/security group must allow this).
 ListenPort = 51820
+
+# Private key for the hub node only.
+# Generate on the VPS and keep file permissions strict (chmod 600 or equivalent).
+# Example file name: wg-prod-hub-hetzner-cx23-01.private
 PrivateKey = <SERVER_PRIVATE_KEY>
 
-# Example peer: laptop
+# Example peer: admin laptop
+# Add one [Peer] block per device.
+# PublicKey is safe to store in config and git templates.
 [Peer]
 PublicKey = <LAPTOP_PUBLIC_KEY>
+
+# Only route this peer's tunnel IP through this peer.
+# Use /32 to keep peer routing explicit and deterministic.
 AllowedIPs = 10.100.0.2/32

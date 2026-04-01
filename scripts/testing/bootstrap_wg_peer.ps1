@@ -19,7 +19,7 @@ param(
 
     [string]$OutputDir,
 
-    [string]$AllowedIps = "10.100.0.1/32",
+    [string]$AllowedIps = "10.100.0.0/24",
 
     [string]$Dns = "1.1.1.1",
 
@@ -89,7 +89,7 @@ if (-not (Test-IpCidr -Value $PeerIpCidr)) {
 }
 
 if (-not (Test-IpCidr -Value $AllowedIps)) {
-    Fail "AllowedIps must look like CIDR (example: 10.100.0.1/32)"
+    Fail "AllowedIps must look like CIDR (example: 10.100.0.0/24)"
 }
 
 if ([string]::IsNullOrWhiteSpace($ServerEndpoint) -or $ServerEndpoint -notmatch ':') {

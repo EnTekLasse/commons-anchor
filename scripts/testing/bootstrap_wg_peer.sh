@@ -21,7 +21,7 @@ Environment overrides:
   WG_ENV=prod|lab|dr           (default: prod)
   WG_ROLE=peer|hub             (default: peer)
   WG_OUTPUT_DIR=<path>         (default: ~/wireguard-local)
-  WG_ALLOWED_IPS=<cidr-list>   (default: 10.100.0.1/32)
+  WG_ALLOWED_IPS=<cidr-list>   (default: 10.100.0.0/24)
   WG_DNS=<dns-ip>              (default: 1.1.1.1)
   WG_KEEPALIVE=<seconds>       (default: 25)
   WG_BIN=<wg-command>          (default: wg)
@@ -46,7 +46,7 @@ SERVER_PUBLIC_KEY="$4"
 WG_ENV="${WG_ENV:-prod}"
 WG_ROLE="${WG_ROLE:-peer}"
 WG_OUTPUT_DIR="${WG_OUTPUT_DIR:-$HOME/wireguard-local}"
-WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-10.100.0.1/32}"
+WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-10.100.0.0/24}"
 WG_DNS="${WG_DNS:-1.1.1.1}"
 WG_KEEPALIVE="${WG_KEEPALIVE:-25}"
 WG_BIN="${WG_BIN:-wg}"

@@ -98,7 +98,7 @@ Proposed defaults:
 - Profile name: `wg-prod-peer-admin-laptop-01`
 - Interface Address: `10.100.0.2/32`
 - DNS: `1.1.1.1` (or internal DNS when available)
-- AllowedIPs baseline: `10.100.0.1/32` for the first management-only rollout
+- AllowedIPs baseline: `10.100.0.0/24` for hub-and-spoke peer reachability via Hetzner
 - Full-tunnel mode (`0.0.0.0/0`) is exception-only and must be time-boxed.
 - PersistentKeepalive: `25` (for NAT stability)
 
@@ -116,7 +116,7 @@ Defaults used by both scripts:
 - Output folder:
   - Windows: `%USERPROFILE%\\Documents\\wireguard-local\\`
   - Linux/macOS: `~/wireguard-local/`
-- AllowedIPs: `10.100.0.1/32`
+- AllowedIPs: `10.100.0.0/24`
 - DNS: `1.1.1.1`
 - Keepalive: `25`
 
@@ -164,6 +164,110 @@ Hardware-day Windows command sequence (reference):
 5. Verify public SSH is not relied on:
   - `Test-NetConnection <public-host-or-ip> -Port 22`
 6. Record outputs in evidence file.
+
+## 5a) Process Notes: Stable SSH over WireGuard (Windows -> Hetzner)
+
+Context:
+- WireGuard and SSH configuration itself was straightforward.
+- The practical challenge was Windows client behavior: identity selection, missing keepalive, implicit SSH client configuration, and unclear route verification.
+- Conclusion: Stable operations require deterministic client behavior, not only correct server configuration.
+- For the broader management-plane model and route-verification method, see `docs/security/wireguard-remote-access.md`.
+
+### Observation 1: SSH can work via public IP but fail via WireGuard
+
+- SSH could be stable against the public IP while being unstable against `10.100.0.1`.
+- The root cause was Windows OpenSSH client behavior (key selection per destination), not WireGuard cryptography or topology.
+- Implicit default behavior is not reliable enough for secure management access.
+
+### Observation 2: Explicit SSH client configuration was required
+
+It was necessary to create an explicit `~/.ssh/config` and force identity usage:
+
+```sshconfig
+Host *
+    ServerAliveInterval 30
+    ServerAliveCountMax 10
+
+Host hetzner-wg
+    HostName 10.100.0.1
+    User root
+    IdentityFile ~/.ssh/id_ed25519_hetzner_admin_laptop_01
+    IdentitiesOnly yes
+```
+
+Without `IdentityFile` + `IdentitiesOnly yes`, the client may try the wrong key or multiple keys in sequence, which can produce misleading errors (for example password prompts or `Permission denied`).
+
+### Observation 3: Keepalive was critical on Windows (not optional)
+
+Without keepalive, the following issues were observed:
+- Frozen PowerShell/Terminal sessions after idle time
+- Connections dropped without clear errors
+- Ghost sessions left on the server
+- Confusing troubleshooting across WireGuard vs SSH vs terminal behavior
+
+Required global settings:
+- `ServerAliveInterval 30`
+- `ServerAliveCountMax 10`
+
+This is a stability prerequisite on Windows over VPN, not a performance optimization.
+
+### Observation 4: Host alias improved both ergonomics and verification
+
+The `hetzner-wg` alias provided:
+- Consistent usage: `ssh hetzner-wg`
+- Lower risk of testing the wrong destination
+- An explicit expectation of WireGuard routing because `HostName` points to `10.100.0.1`
+
+### Observation 5: Route verification required server-side observation
+
+The client does not always clearly show which interface or route SSH actually used.
+So route verification was done on the server:
+
+```bash
+who
+echo "$SSH_CONNECTION"
+```
+
+Expected result for correct WireGuard routing:
+- Source IP is the peer tunnel IP (for example `10.100.0.2`)
+- Not the public client IP
+
+`It works` is not sufficient evidence in a security setup without route proof.
+
+### Overall learning
+
+The difficult part of secure management access is determinism, not base configuration.
+
+On Windows over WireGuard, the following must be explicit:
+- SSH client configuration
+- Identity selection
+- Keepalive
+- Route verification
+
+These are not optional conveniences. They are required for stable and understandable operations.
+
+## 5b) Caveat: Windows WireGuard GUI caches configuration state
+
+Important when changing `.conf` files:
+
+One-time actions that may not take effect properly:
+- Editing `.conf` and re-importing same filename
+- Deactivate/Activate tunnel (may use cached state)
+
+Reliable method for configuration changes:
+1. Delete the profile in WireGuard GUI.
+2. Delete the `.conf` file locally.
+3. Generate or edit a fresh `.conf`.
+4. Import again into WireGuard.
+
+Common scenario:
+- You change `AllowedIPs` in the `.conf`.
+- You re-import without deletion.
+- Tunnel still uses old `AllowedIPs`.
+- Appears to be a VPN issue, but is actually GUI state caching.
+
+Workaround when troubleshooting:
+- Always delete and re-import on Windows if configuration behavior seems inconsistent.
 
 ## 6) Revoke drill (client perspective)
 

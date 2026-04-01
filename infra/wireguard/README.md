@@ -67,9 +67,12 @@ The goal is both **practical remote access** and **hands-on learning** in networ
 | Node         | WireGuard IP |
 |--------------|--------------|
 | VPS          | 10.100.0.1   |
-| Home network | 10.100.0.2   |
+| Admin laptop | 10.100.0.2   |
+| Lenovo Tiny  | 10.100.0.3   |
 
 Subnet: `10.100.0.0/24`
+
+Use `/32` addresses on peers and keep assignments stable once a peer is in service.
 
 ---
 

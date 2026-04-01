@@ -18,7 +18,10 @@
 
 - VPS hub: 10.100.0.1/24
 - Laptop peer: 10.100.0.2/32
-- Optional mobile peer: 10.100.0.3/32
+- Lenovo Tiny peer: 10.100.0.3/32
+- Optional mobile/emergency peer: 10.100.0.4/32
+
+Use this as the canonical allocation order for the first rollout. Keep peer IPs stable once assigned.
 
 ## Step 1: Bootstrap VPS user and SSH
 
@@ -64,6 +67,15 @@ sudo ufw status verbose
 ```
 
 Expected: only 22/tcp and 51820/udp allowed inbound.
+
+Before moving to the next step, verify SSH service status:
+
+```bash
+sudo systemctl status ssh
+sudo netstat -ln | grep :22
+```
+
+Expected: sshd listening on `:::22` or `0.0.0.0:22` (both IPv4 and IPv6).
 
 ## Step 3: Install server key and config
 
@@ -114,7 +126,7 @@ Address = 10.100.0.2/32
 [Peer]
 PublicKey = <SERVER_PUBLIC_KEY>
 Endpoint = <CX23_PUBLIC_IP>:51820
-AllowedIPs = 10.100.0.1/32
+AllowedIPs = 10.100.0.0/24
 PersistentKeepalive = 25
 ```
 
@@ -134,6 +146,28 @@ sudo wg show
 ```
 
 Expected: recent handshake and data transfer counters on laptop peer.
+
+## Step 4b (optional): Enable peer-to-peer routing via hub (laptop <-> Lenovo)
+
+Use this only when you need laptop to reach Lenovo Tiny through Hetzner.
+For management-only rollout, skip this step.
+
+Enable IPv4 forwarding on hub:
+
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+echo 'net.ipv4.ip_forward=1' | sudo tee /etc/sysctl.d/99-wireguard-forwarding.conf
+sudo sysctl --system
+```
+
+Required peer `AllowedIPs` model for peer-to-peer:
+- Hub `wg0.conf`: keep one `/32` per peer in each `[Peer]` block.
+- Laptop peer config: route the WireGuard subnet via hub, for example `AllowedIPs = 10.100.0.0/24`.
+- Lenovo peer config: route the WireGuard subnet via hub, for example `AllowedIPs = 10.100.0.0/24`.
+
+Why this is required:
+- Handshake success alone does not prove peer-to-peer reachability.
+- Without forwarding and explicit return-path `AllowedIPs`, traffic can fail silently or report destination unreachable.
 
 ## Step 5: Restrict SSH to tunnel only
 

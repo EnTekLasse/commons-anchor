@@ -32,6 +32,10 @@ Rule of thumb:
 - Lenovo Tiny and laptop are both `peer` nodes.
 - Do not call both Hetzner and Lenovo `server` in key filenames.
 
+Current peer IP plan:
+- Laptop: `10.100.0.2/32`
+- Lenovo Tiny: `10.100.0.3/32`
+
 ## Server keys
 ```bash
 cd /etc/wireguard
