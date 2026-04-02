@@ -149,6 +149,62 @@ When deploying SQL changes to Lenovo without reset:
 6. Check raw, enrich, and curated row samples.
 7. Check Grafana or Metabase queries that depend on the changed fields.
 
+## PowerShell + SSH Quoting Pitfalls
+
+When running long `ssh ... "..."` commands from PowerShell, local parsing can break arguments before they reach the remote shell.
+
+Typical symptom:
+
+- `* : The term '*' is not recognized ...`
+
+Why it happens:
+
+- PowerShell parses native command arguments first.
+- Nested escaped quotes plus semicolon chains can cause parts of SQL (for example `COUNT(*)`) to be interpreted locally instead of remotely.
+
+This behavior is consistent with Microsoft docs for `about_Parsing` and `about_Quoting_Rules`.
+
+### Preferred pattern: split into multiple SSH calls
+
+Use short, explicit calls instead of one huge chained command.
+
+```powershell
+ssh lenovo-wg "cd ~/serverprojekt/commons-anchor; docker compose --profile jobs run --rm power-price-transform"
+ssh lenovo-wg "cd ~/serverprojekt/commons-anchor; docker compose exec -T postgres psql -U dw_admin -d dw -c 'SELECT COUNT(*) AS raw_energinet_rows FROM staging.energinet_raw;'"
+ssh lenovo-wg "cd ~/serverprojekt/commons-anchor; docker compose exec -T postgres psql -U dw_admin -d dw -c 'SELECT COUNT(*) AS enrich_energinet_rows FROM enrich.energinet_price;'"
+ssh lenovo-wg "cd ~/serverprojekt/commons-anchor; docker compose exec -T postgres psql -U dw_admin -d dw -c 'SELECT COUNT(*) AS mart_rows FROM mart.power_price_15min;'"
+```
+
+This is the most robust and easiest to debug.
+
+### Preferred pattern: send a script over SSH stdin
+
+For longer sequences, send a script to remote `bash`.
+
+```powershell
+@'
+set -euo pipefail
+cd ~/serverprojekt/commons-anchor
+docker compose --profile jobs run --rm energidata-ingest
+docker compose --profile jobs run --rm power-price-transform
+docker compose exec -T postgres psql -U dw_admin -d dw -c "SELECT COUNT(*) AS raw_energinet_rows FROM staging.energinet_raw;"
+docker compose exec -T postgres psql -U dw_admin -d dw -c "SELECT COUNT(*) AS enrich_energinet_rows FROM enrich.energinet_price;"
+docker compose exec -T postgres psql -U dw_admin -d dw -c "SELECT COUNT(*) AS mart_rows FROM mart.power_price_15min;"
+'@ | ssh lenovo-wg 'bash -s'
+```
+
+This avoids most nested-quote edge cases.
+
+### Optional workaround: stop-parsing token
+
+PowerShell supports `--%` to stop further parsing for native commands.
+
+```powershell
+ssh --% lenovo-wg "cd ~/serverprojekt/commons-anchor; docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+```
+
+Use this only when needed. The split-command or stdin-script patterns are generally clearer.
+
 ## Review Checklist
 
 Before merging a SQL change, verify:

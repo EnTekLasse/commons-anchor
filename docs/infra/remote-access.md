@@ -158,3 +158,53 @@ Remote access in this project is intentionally layered:
 4. Elevate privileges explicitly if required
 
 If any step is unclear, it should fail loudly and safely.
+
+---
+
+## Access Lenovo Dashboards From Laptop
+
+Grafana and Metabase are intentionally bound to localhost on Lenovo.
+Use SSH port forwarding from the laptop to access them safely.
+
+### Standard ports
+
+Run from laptop:
+
+```powershell
+ssh -N -L 3000:localhost:3000 -L 3001:localhost:3001 lenovo-wg
+```
+
+Open in browser:
+
+- Grafana: http://localhost:3000
+- Metabase: http://localhost:3001
+
+Keep the tunnel terminal open while using the dashboards.
+Stop access by pressing `Ctrl + C`.
+
+### If local ports are already in use
+
+Use alternate local ports:
+
+```powershell
+ssh -N -L 33000:localhost:3000 -L 33001:localhost:3001 lenovo-wg
+```
+
+Open in browser:
+
+- Grafana: http://localhost:33000
+- Metabase: http://localhost:33001
+
+### Quick connectivity check
+
+```powershell
+$g = (Invoke-WebRequest -UseBasicParsing http://localhost:33000 -TimeoutSec 10).StatusCode
+$m = (Invoke-WebRequest -UseBasicParsing http://localhost:33001 -TimeoutSec 10).StatusCode
+"Grafana HTTP: $g"
+"Metabase HTTP: $m"
+```
+
+Expected:
+
+- Grafana: `200` or `302`
+- Metabase: `200`
