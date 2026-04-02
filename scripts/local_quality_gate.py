@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 
@@ -14,8 +15,25 @@ def _run_step(label: str, args: list[str]) -> int:
     return 0
 
 
+def _missing_modules(modules: list[str]) -> list[str]:
+    missing: list[str] = []
+    for module in modules:
+        if importlib.util.find_spec(module) is None:
+            missing.append(module)
+    return missing
+
+
 def main() -> int:
     python = sys.executable
+    required_modules = ["ruff", "pyright", "pytest", "pglast"]
+    missing = _missing_modules(required_modules)
+    if missing:
+        names = ", ".join(missing)
+        print(f"[quality-gate] missing Python modules: {names}")
+        print("[quality-gate] install with: python -m pip install -e '.[dev]'")
+        # Return a dedicated exit code so wrapper scripts can warn and continue.
+        return 3
+
     steps: list[tuple[str, list[str]]] = [
         (
             "ruff format --check",

@@ -25,7 +25,16 @@ echo "[full] run batch jobs"
 
 if command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   echo "[full] run local quality gate"
+  set +e
   "$PYTHON_BIN" -m scripts.local_quality_gate
+  QUALITY_GATE_CODE=$?
+  set -e
+
+  if [[ "$QUALITY_GATE_CODE" == "3" ]]; then
+    echo "[full] warning: local quality gate skipped (missing Python dev tooling)"
+  elif [[ "$QUALITY_GATE_CODE" != "0" ]]; then
+    exit "$QUALITY_GATE_CODE"
+  fi
 else
   echo "[full] warning: python not found, skipping local quality gate"
 fi
