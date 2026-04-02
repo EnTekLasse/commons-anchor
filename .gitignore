@@ -40,3 +40,7 @@ firmware/**/COMMIT_NOTES.md
 
 # Generated local test reports
 docs/testing/parity-report-windows-laptop.md
+docs/testing/parity-report-linux-host.md
+
+# Local backup artifacts (pg_dump etc.)
+backups/
