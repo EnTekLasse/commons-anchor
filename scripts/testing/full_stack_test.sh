@@ -7,7 +7,7 @@ DOCKER_BIN="${DOCKER_BIN:-docker}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 SEED_MQTT="${SEED_MQTT:-0}"
 
-"${SCRIPT_DIR}/ensure_docker_ready.sh"
+bash "${SCRIPT_DIR}/ensure_docker_ready.sh"
 
 cd "$REPO_ROOT"
 
@@ -16,7 +16,7 @@ echo "[full] compose up all services"
 
 if [[ "$SEED_MQTT" == "1" ]]; then
   echo "[full] seed MQTT telemetry"
-  SKIP_PREFLIGHT=1 "${SCRIPT_DIR}/seed_mqtt_telemetry.sh"
+  SKIP_PREFLIGHT=1 bash "${SCRIPT_DIR}/seed_mqtt_telemetry.sh"
 fi
 
 echo "[full] run batch jobs"

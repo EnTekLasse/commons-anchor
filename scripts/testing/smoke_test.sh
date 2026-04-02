@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 DOCKER_BIN="${DOCKER_BIN:-docker}"
 
-"${SCRIPT_DIR}/ensure_docker_ready.sh"
+bash "${SCRIPT_DIR}/ensure_docker_ready.sh"
 
 cd "$REPO_ROOT"
 

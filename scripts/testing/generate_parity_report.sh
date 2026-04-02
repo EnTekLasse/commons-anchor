@@ -21,7 +21,7 @@ run_step() {
 get_http_status() {
   local url="$1"
   for _ in $(seq 1 20); do
-    if code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null); then
+    if code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null); then
       echo "$code"
       return 0
     fi
@@ -31,49 +31,17 @@ get_http_status() {
 }
 
 get_counts() {
-  if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-    echo "mqtt_rows=ERR"
-    echo "energinet_rows=ERR"
-    echo "mart_rows=ERR"
-    return 0
-  fi
+  local mqtt_rows
+  local energinet_rows
+  local mart_rows
 
-  "$PYTHON_BIN" - <<'PY'
-from pathlib import Path
-try:
-    import psycopg
-except Exception:
-    print('mqtt_rows=ERR')
-    print('energinet_rows=ERR')
-    print('mart_rows=ERR')
-    raise SystemExit(0)
+  mqtt_rows="$(${DOCKER_BIN} compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select count(*) from staging.mqtt_raw"' | tr -d '[:space:]')"
+  energinet_rows="$(${DOCKER_BIN} compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select count(*) from staging.energinet_raw"' | tr -d '[:space:]')"
+  mart_rows="$(${DOCKER_BIN} compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select count(*) from mart.power_price_15min"' | tr -d '[:space:]')"
 
-env = {}
-for line in Path('.env').read_text(encoding='utf-8').splitlines():
-    line = line.strip()
-    if not line or line.startswith('#') or '=' not in line:
-        continue
-    k, v = line.split('=', 1)
-    env[k.strip()] = v.strip()
-
-pwd = Path(env['POSTGRES_PASSWORD_FILE']).read_text(encoding='utf-8').strip()
-conn = psycopg.connect(
-    host='127.0.0.1',
-    port=5432,
-    user=env['POSTGRES_USER'],
-    dbname=env['POSTGRES_DB'],
-    password=pwd,
-)
-queries = {
-    'mqtt_rows': 'select count(*) from staging.mqtt_raw',
-    'energinet_rows': 'select count(*) from staging.energinet_raw',
-    'mart_rows': 'select count(*) from mart.power_price_15min',
-}
-with conn, conn.cursor() as cur:
-    for name, query in queries.items():
-        cur.execute(query)
-        print(name + '=' + str(cur.fetchone()[0]))
-PY
+  echo "mqtt_rows=${mqtt_rows:-ERR}"
+  echo "energinet_rows=${energinet_rows:-ERR}"
+  echo "mart_rows=${mart_rows:-ERR}"
 }
 
 cd "$REPO_ROOT"
@@ -81,9 +49,9 @@ TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S %z')"
 OVERALL="PASS"
 STEP_RESULTS=()
 
-run_step "Docker preflight" "${SCRIPT_DIR}/ensure_docker_ready.sh"
-run_step "Linux smoke test" "${SCRIPT_DIR}/smoke_test.sh"
-run_step "Linux full stack test" "${SCRIPT_DIR}/full_stack_test.sh"
+run_step "Docker preflight" bash "${SCRIPT_DIR}/ensure_docker_ready.sh"
+run_step "Linux smoke test" bash "${SCRIPT_DIR}/smoke_test.sh"
+run_step "Linux full stack test" bash "${SCRIPT_DIR}/full_stack_test.sh"
 
 GRAFANA_STATUS="$(get_http_status "http://localhost:3000")"
 METABASE_STATUS="$(get_http_status "http://localhost:3001")"
