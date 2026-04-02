@@ -21,7 +21,7 @@ Backlog policy:
 - A2: Postgres schemas (3)
 
 ## Ingestion and Modeling
-- B1: API ingestion (5)
+- B1: API ingestion (5) — inkl. EUR elspotprice ingest (P12)
 - B2: MQTT ingestion (8)
 - C1: Enriched standardization (3)
 - C2: Curated star schema build (5)
@@ -30,8 +30,8 @@ Backlog policy:
 ## BI and Operations
 - D1: Grafana dashboards (5)
 - D2: Metabase showcase (3)
-- E1: Ops monitoring (5)
-- F1: Project demo (3)
+- E1: Ops monitoring (5) — inkl. screenshots og operational runbook (P10)
+- F1: Project demo (3) — inkl. architecture walkthrough og demo script (P9)
 
 ## Validation Gates
 - V1: Local smoke test gate (3)
@@ -42,18 +42,22 @@ Backlog policy:
 ## Production and Security
 - G1: Production host (8)
 - H1: WireGuard + SSH hardening (8)
-- H2: Secrets hardening pass (3)
+- H2: Secrets hardening pass (3) — inkl. secrets strategy evaluation (dotenv → vault/sops) (P8)
 - S1: Local secrets baseline (2)
 - S2: DB password rotation (2)
 
 ## Standards and Toolchain
 - N1a: Verify Energinet numeric formats (1) ✅
 - N1b: Verify MQTT telemetry numeric contract (2)
-- N2: Define project numeric standard (3)
+- N2: Define project numeric standard (3) — inkl. anvend standard i dashboards og docs (P7)
 - T1: Toolchain baseline document (2)
 - T2: Toolchain automation baseline (3)
-- T3: Toolchain hardening pass (3)
+- T3: Toolchain hardening pass (3) — inkl. scripts-mappe og sql-mappe reorganisering (P13, P14)
 - HW1: Hardware bring-up baseline (3)
+
+## Process and Governance
+- W1: Branching strategy og PR template (3)
+- W2: ADR template og første architecture decisions (2)
 
 ## ML Platform Foundation
 - M1: ML data readiness baseline (3)
@@ -64,26 +68,13 @@ Backlog policy:
 - M6: ML monitoring baseline (3)
 
 ## Parking Lot (Not Yet in Kanban/Tech-Tree)
-- P1: Add branching strategy and PR template (3)
-- P2: Add ADR template and first architecture decisions (2)
-- P3: Add db migration flow (Alembic or dbmate) (5)
-- P4: Define MQTT topic naming convention and payload schema (3)
-- P5: Add replay/dead-letter strategy for malformed payloads (5)
-- P6: Add data quality dashboard (freshness + row count) (5)
-- P7: Apply numeric formatting standard in dashboards and docs (3)
-- P8: Secrets strategy (dotenv -> vault/sops) (5)
-- P9: Record architecture walkthrough and demo script (3)
-- P10: Add screenshots and operational runbook (3)
 - P11: Add benchmark and cost profile section (2)
-- P12: Ingest elspotprices with EUR as well (1)
-- P13: Organize Scripts folder - ingest scripts in own subfolder. (1)
-- P14: Organize sql folder - see "Planned mapping" in data-warehouse-strategy.md
 
 ## Candidate sprint order
 - Sprint 1 (13 SP): A1, A2, B1
 - Sprint 2 (16 SP): B2, C1, C2
 - Sprint 3 (16 SP): C3, D1, D2, V1
-- Sprint 4 (16 SP): V2, V3, N1b, N2, T2
+- Sprint 4 (21 SP): V2, V3, N1b, N2, T2, W1, W2
 - Sprint 5 (18 SP): V4, E1, G1
 - Sprint 6 (15 SP): H1, H2, S2, T3
 - Sprint 7 (19 SP): M1, M2, M3, M4, M5

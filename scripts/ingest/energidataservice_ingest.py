@@ -4,8 +4,6 @@ import argparse
 import json
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -120,33 +118,24 @@ def fetch_records(settings: Settings) -> list[dict[str, Any]]:
     return records
 
 
-def parse_utc_timestamp(value: str) -> datetime:
-    parsed = datetime.fromisoformat(value)
-    if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=UTC)
-    return parsed.astimezone(UTC)
-
-
-def normalize_records(settings: Settings, records: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
-    # Price precision policy: API values are converted via str() before Decimal
-    # to avoid float rounding errors. DB column is NUMERIC(12, 4).
-    # Null prices are skipped: the API occasionally omits prices for future hours.
+def build_raw_rows(settings: Settings, records: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
     spec = DATASET_SPECS[settings.dataset]
-    normalized_rows: list[tuple[Any, ...]] = []
+    raw_rows: list[tuple[Any, ...]] = []
     for record in records:
-        raw_price = record[spec.price_column]
-        if raw_price is None:
+        price_area = record.get("PriceArea")
+        source_time_text = record.get(spec.time_column)
+        if price_area is None or source_time_text is None:
             continue
-        normalized_rows.append(
+
+        raw_rows.append(
             (
                 settings.dataset,
-                str(record["PriceArea"]),
-                Decimal(str(raw_price)),
-                parse_utc_timestamp(str(record[spec.time_column])),
+                str(price_area),
+                str(source_time_text),
                 Jsonb(record),
             )
         )
-    return normalized_rows
+    return raw_rows
 
 
 def write_records(settings: Settings, rows: list[tuple[Any, ...]]) -> None:
@@ -165,16 +154,14 @@ def write_records(settings: Settings, rows: list[tuple[Any, ...]]) -> None:
                 """
                 INSERT INTO staging.energinet_raw (
                     dataset,
-                    area,
-                    price_dkk_mwh,
-                    ts_utc,
-                    payload
+                    price_area,
+                    source_time_text,
+                    record
                 )
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (dataset, area, ts_utc)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (dataset, price_area, source_time_text)
                 DO UPDATE SET
-                    price_dkk_mwh = EXCLUDED.price_dkk_mwh,
-                    payload = EXCLUDED.payload,
+                    record = EXCLUDED.record,
                     ingested_at = NOW()
                 """,
                 rows,
@@ -186,7 +173,7 @@ def main() -> int:
     args = parse_args()
     settings = load_settings(args)
     records = fetch_records(settings)
-    rows = normalize_records(settings, records)
+    rows = build_raw_rows(settings, records)
     write_records(settings, rows)
     print(
         f"Ingested {len(rows)} rows from {settings.dataset} into "

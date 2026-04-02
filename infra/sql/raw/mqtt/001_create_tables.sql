@@ -1,0 +1,9 @@
+CREATE SCHEMA IF NOT EXISTS staging;
+
+CREATE TABLE IF NOT EXISTS staging.mqtt_raw (
+    id BIGSERIAL PRIMARY KEY,
+    topic TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    source TEXT NOT NULL DEFAULT 'esp32',
+    ingested_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

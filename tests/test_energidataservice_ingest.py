@@ -1,10 +1,9 @@
 from argparse import Namespace
-from datetime import UTC, datetime
 
 from scripts.ingest.energidataservice_ingest import (
+    build_raw_rows,
     build_request_params,
     load_settings,
-    normalize_records,
 )
 
 
@@ -54,7 +53,7 @@ def test_build_request_params_uses_dataset_specific_columns(monkeypatch):
     assert params["timezone"] == "UTC"
 
 
-def test_normalize_records_skips_null_price(monkeypatch):
+def test_build_raw_rows_keeps_null_price_in_source_record(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
     args = Namespace(
         dataset="DayAheadPrices",
@@ -70,7 +69,7 @@ def test_normalize_records_skips_null_price(monkeypatch):
     )
 
     settings = load_settings(args)
-    rows = normalize_records(
+    rows = build_raw_rows(
         settings,
         [
             {
@@ -81,10 +80,14 @@ def test_normalize_records_skips_null_price(monkeypatch):
         ],
     )
 
-    assert rows == []
+    dataset, price_area, source_time_text, payload = rows[0]
+    assert dataset == "DayAheadPrices"
+    assert price_area == "DK1"
+    assert source_time_text == "2026-03-16T22:00:00"
+    assert payload.obj["DayAheadPriceDKK"] is None
 
 
-def test_normalize_records_converts_timestamp_and_price(monkeypatch):
+def test_build_raw_rows_preserves_source_timestamp_and_price(monkeypatch):
     monkeypatch.setenv("POSTGRES_PASSWORD", "secret")
     args = Namespace(
         dataset="DayAheadPrices",
@@ -100,7 +103,7 @@ def test_normalize_records_converts_timestamp_and_price(monkeypatch):
     )
 
     settings = load_settings(args)
-    rows = normalize_records(
+    rows = build_raw_rows(
         settings,
         [
             {
@@ -111,8 +114,8 @@ def test_normalize_records_converts_timestamp_and_price(monkeypatch):
         ],
     )
 
-    dataset, area, price, ts_utc, _payload = rows[0]
+    dataset, area, source_time_text, payload = rows[0]
     assert dataset == "DayAheadPrices"
     assert area == "DK1"
-    assert str(price) == "834.47"
-    assert ts_utc == datetime(2026, 3, 16, 22, 0, tzinfo=UTC)
+    assert source_time_text == "2026-03-16T22:00:00"
+    assert payload.obj["DayAheadPriceDKK"] == 834.47

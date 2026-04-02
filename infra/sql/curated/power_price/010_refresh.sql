@@ -1,3 +1,7 @@
+BEGIN;
+
+TRUNCATE TABLE mart.power_price_15min;
+
 INSERT INTO mart.power_price_15min (
     ts_utc,
     area,
@@ -11,11 +15,8 @@ SELECT
     ROUND(AVG(price_dkk_mwh), 4) AS price_dkk_mwh,
     COUNT(*) AS source_count,
     NOW() AS refreshed_at
-FROM staging.energinet_raw
+FROM enrich.energinet_price
 WHERE dataset = 'DayAheadPrices'
-GROUP BY 1, 2
-ON CONFLICT (ts_utc, area)
-DO UPDATE SET
-    price_dkk_mwh = EXCLUDED.price_dkk_mwh,
-    source_count = EXCLUDED.source_count,
-    refreshed_at = NOW();
+GROUP BY 1, 2;
+
+COMMIT;

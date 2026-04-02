@@ -570,22 +570,30 @@ Windows note (recommended):
 6. Verify raw rows landed in PostgreSQL
 
   ```powershell
-  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT dataset, area, ts_utc, price_dkk_mwh FROM staging.energinet_raw ORDER BY ts_utc DESC LIMIT 10;"
+  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT dataset, price_area, source_time_text, record FROM staging.energinet_raw ORDER BY ingested_at DESC LIMIT 10;"
   ```
 
-7. Run first mart transformation (15-minute curated)
+7. Run enrich + curated transformations
 
   ```powershell
   docker compose --profile jobs run --rm power-price-transform
   ```
 
-8. Verify curated quarter-hour rows landed in mart
+  This job executes `infra/sql/020_refresh_all.sql`, which includes layer refresh files in dependency order.
+
+8. Verify enriched typed rows landed in PostgreSQL
+
+  ```powershell
+  docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT dataset, area, ts_utc, price_dkk_mwh FROM enrich.energinet_price ORDER BY ts_utc DESC LIMIT 10;"
+  ```
+
+9. Verify curated quarter-hour rows landed in mart
 
   ```powershell
   docker compose exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "SELECT ts_utc, area, price_dkk_mwh FROM mart.power_price_15min ORDER BY ts_utc DESC, area ASC LIMIT 10;"
   ```
 
-9. MQTT ingestion smoke test (phone/ESP32 -> MQTT -> Postgres)
+10. MQTT ingestion smoke test (phone/ESP32 -> MQTT -> Postgres)
 
   ```powershell
   docker compose up -d --build mqtt mqtt-ingest postgres
@@ -686,7 +694,7 @@ Full Mermaid compile validation (all diagrams + README blocks):
 |- .github/workflows/mermaid-validate.yml
 |- infra/
 |  |- mosquitto/config/mosquitto.conf
-|  \- sql/init/001_init.sql
+|  \- sql/001_bootstrap.sql
 \- docs/
 	|- architecture/
 	|  |- adr-0001-platform-scope.md
@@ -710,7 +718,26 @@ Full Mermaid compile validation (all diagrams + README blocks):
 |  |- grafana/dashboards/ + provisioning/
 |  |- mosquitto/config/mosquitto.conf
 |  |- secrets/                  # gitignored; created manually per onboarding doc
-|  \- sql/init/001_init.sql
+|  \- sql/
+|     |- 001_bootstrap.sql
+|     |- 020_refresh_all.sql
+|     |- migrations/
+|     |- raw/
+|     |  |- energidataservice/001_create_tables.sql
+|     |  \- mqtt/001_create_tables.sql
+|     |- enrich/
+|     |  |- energidataservice/
+|     |  |  |- 001_create_tables.sql
+|     |  |  \- 010_refresh.sql
+|     |  \- mqtt/
+|     |     |- 001_create_tables.sql
+|     |     \- 010_refresh.sql
+|     |- curated/
+|     |  \- power_price/
+|     |     |- 001_create_tables.sql
+|     |     \- 010_refresh.sql
+|     \- serving/
+|        \- power_price_overview/001_create_views.sql
 |- scripts/
 |  |- local_quality_gate.py     # single-command quality gate
 |  |- check_mermaid_compile.py  # Mermaid compile validation
@@ -718,6 +745,7 @@ Full Mermaid compile validation (all diagrams + README blocks):
 |  |- energidataservice_ingest.py
 |  |- generate_mermaid_from_model.py
 |  \- mqtt_ingest.py
+|- docs/architecture/sql-delivery-playbook.md
 |- tests/
 |  |- test_energidataservice_ingest.py
 |  \- test_mqtt_ingest.py

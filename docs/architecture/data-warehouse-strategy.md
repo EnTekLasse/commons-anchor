@@ -20,21 +20,21 @@ Conceptual layers:
 Current physical mapping in MVP:
 
 - Raw -> `staging`
+- Enriched -> `enrich`
 - Curated -> `mart`
-- Enriched -> planned as a dedicated schema in a later phase
 - Serving -> planned as `semantic` views on top of curated star schemas
 
 
 Planned mapping:
 
-- Orchestration could be using "for-each" logic
-
-- Ingestion: .py scripts in scripts/ingest folder - ingest as raw as possible
-- Raw folder: [source]_create_tables.sql , [source]_load.sql
-- Enrich folder: [source]_create_tables.sql , [source]_enrich.sql
-- Curated folder: [domain]_star_create_tables.sql, [domain]_star_transform.sql
-- Serving folder: [usecase]_view.sql
-- ML Feature folder: [source]_create_tables.sql, [source]_generate_feature.sql
+- Ingestion: Python scripts in `scripts/ingest` load source-faithful rows into Raw.
+- Raw folder: `raw/<source>/001_create_tables.sql`
+- Enrich folder: `enrich/<source>/001_create_tables.sql` and `010_refresh.sql`
+- Curated folder: `curated/<star_schema>/001_create_tables.sql` and `010_refresh.sql`
+- Serving folder: `serving/<usecase>/001_create_views.sql`
+- ML Feature folder: `ml_feature/<feature_group>/001_create_tables.sql` and `010_refresh.sql`
+- Refresh orchestration: `infra/sql/020_refresh_all.sql`
+- Existing-database changes: `infra/sql/migrations/*.sql`
 
 
 ### Physical Organization Rules
@@ -50,13 +50,15 @@ Target convention:
 - Enriched: one source, one folder/module, standardized source tables plus shared reference mappings.
 - Curated: domain marts organized as star schemas (facts + dimensions), independent of source folder boundaries.
 - Serving: semantic views organized by business entity/metric groups, independent of source-specific raw/enriched modules.
+- Use consistent filenames inside folders so related create/refresh files sort together visually.
 
 ## Data Contracts
 
 - Every ingest job must define required fields and timestamp semantics.
-- Source payload is preserved where possible for traceability.
-- Time values are normalized to UTC before transformation.
-- Numeric fields use explicit conversion and validation in transform logic.
+- Raw tables preserve source payloads and source field values as-is where practical.
+- Raw tables may add operational metadata columns such as ingest timestamp, source system, topic, or deterministic dedupe keys.
+- Time values are normalized to UTC in Enriched, not in Raw.
+- Numeric fields use explicit conversion and validation in Enriched/Curated logic, not in Raw.
 
 ## Quality Gates
 
@@ -68,6 +70,7 @@ Target convention:
 ## Modeling Principles
 
 - Prefer append-friendly raw ingestion.
+- Keep Raw source-faithful: same semantics and as-close-as-practical source datatypes first, typed business conversion later.
 - Keep transforms deterministic and rerunnable.
 - Separate source-specific logic from reusable business transforms.
 - Avoid dashboard-specific calculations in raw/staging layers.
@@ -79,6 +82,9 @@ Target convention:
 - Expand marts only when there is a concrete dashboard or analysis need.
 - Add schema evolution in small, reversible steps.
 - Document each major model decision in ADRs or focused docs.
+- Use bootstrap files only for empty-database initialization; use migrations for existing databases.
+- Keep refresh orchestration explicit rather than implicit recursive folder execution.
+- Use [docs/architecture/sql-delivery-playbook.md](sql-delivery-playbook.md) as the practical workflow guide for adding sources and changing transforms.
 
 ## Semantic Layer Direction
 

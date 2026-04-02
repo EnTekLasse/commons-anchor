@@ -72,6 +72,13 @@ jobs:
                   RAISE EXCEPTION 'Smoke gate failed: staging.energinet_raw is empty';
               END IF;
 
+                IF NOT EXISTS (
+                  SELECT 1
+                  FROM enrich.energinet_price
+                ) THEN
+                  RAISE EXCEPTION 'Smoke gate failed: enrich.energinet_price is empty';
+                END IF;
+
               IF NOT EXISTS (
                   SELECT 1
                   FROM mart.power_price_15min
@@ -96,6 +103,7 @@ jobs:
         shell: bash
         run: |
           docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS staging_rows FROM staging.energinet_raw;"
+          docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS enrich_rows FROM enrich.energinet_price;"
           docker compose exec -T postgres psql -U dw_admin -d dw -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS mart_rows FROM mart.power_price_15min;"
 
       - name: Teardown

@@ -13,7 +13,7 @@ services:
       - "${POSTGRES_BIND_ADDRESS:-127.0.0.1}:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/sql/init:/docker-entrypoint-initdb.d:ro
+      - ./infra/sql:/docker-entrypoint-initdb.d:ro
     secrets:
       - postgres_password
     healthcheck:
@@ -55,11 +55,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./infra/sql/transform:/sql/transform:ro
+      - ./infra/sql:/sql:ro
     command:
       - sh
       - -c
-      - export PGPASSWORD="$$(cat /run/secrets/postgres_password)" && psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -f /sql/transform/001_refresh_power_price_15min.sql
+      - export PGPASSWORD="$$(cat /run/secrets/postgres_password)" && psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -f /sql/020_refresh_all.sql
     secrets:
       - postgres_password
     depends_on:
