@@ -15,7 +15,7 @@ cd "${REPO_ROOT}"
 echo "[v3] ensure stack is up"
 "${DOCKER_BIN}" compose up -d postgres
 
-echo "[v3] dump source database to container tmp"
+echo "[v3] dump source database"
 "${DOCKER_BIN}" compose exec -T postgres sh -lc '
   pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc
 ' > "${BACKUP_FILE}"
@@ -35,35 +35,25 @@ echo "[v3] restore into ${RESTORE_DB}"
 " < "${BACKUP_FILE}"
 
 echo "[v3] validate row counts"
-SRC_COUNTS="$("${DOCKER_BIN}" compose exec -T postgres sh -lc '
-  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "
-    SELECT ''staging.mqtt_raw'', COUNT(*) FROM staging.mqtt_raw
-    UNION ALL
-    SELECT ''dw.power_price_raw'', COUNT(*) FROM dw.power_price_raw
-    UNION ALL
-    SELECT ''dm.power_price_hourly'', COUNT(*) FROM dm.power_price_hourly
-    ORDER BY 1;
-  "
-')"
+SRC_MQTT="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "SELECT COUNT(*) FROM staging.mqtt_raw;"')"
+SRC_RAW="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "SELECT COUNT(*) FROM dw.power_price_raw;"')"
+SRC_DM="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "SELECT COUNT(*) FROM dm.power_price_hourly;"')"
 
-RESTORE_COUNTS="$("${DOCKER_BIN}" compose exec -T postgres sh -lc '
-  psql -U "$POSTGRES_USER" -d '"${RESTORE_DB}"' -At -c "
-    SELECT ''staging.mqtt_raw'', COUNT(*) FROM staging.mqtt_raw
-    UNION ALL
-    SELECT ''dw.power_price_raw'', COUNT(*) FROM dw.power_price_raw
-    UNION ALL
-    SELECT ''dm.power_price_hourly'', COUNT(*) FROM dm.power_price_hourly
-    ORDER BY 1;
-  "
-')"
+RST_MQTT="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d '"${RESTORE_DB}"' -At -c "SELECT COUNT(*) FROM staging.mqtt_raw;"')"
+RST_RAW="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d '"${RESTORE_DB}"' -At -c "SELECT COUNT(*) FROM dw.power_price_raw;"')"
+RST_DM="$("${DOCKER_BIN}" compose exec -T postgres sh -lc 'psql -U "$POSTGRES_USER" -d '"${RESTORE_DB}"' -At -c "SELECT COUNT(*) FROM dm.power_price_hourly;"')"
 
 echo "[v3] source counts"
-printf '%s\n' "${SRC_COUNTS}"
+echo "[v3]   staging.mqtt_raw=${SRC_MQTT}"
+echo "[v3]   dw.power_price_raw=${SRC_RAW}"
+echo "[v3]   dm.power_price_hourly=${SRC_DM}"
 
 echo "[v3] restore counts"
-printf '%s\n' "${RESTORE_COUNTS}"
+echo "[v3]   staging.mqtt_raw=${RST_MQTT}"
+echo "[v3]   dw.power_price_raw=${RST_RAW}"
+echo "[v3]   dm.power_price_hourly=${RST_DM}"
 
-if [[ "${SRC_COUNTS}" != "${RESTORE_COUNTS}" ]]; then
+if [[ "${SRC_MQTT}" != "${RST_MQTT}" || "${SRC_RAW}" != "${RST_RAW}" || "${SRC_DM}" != "${RST_DM}" ]]; then
   echo "[v3] FAIL: source and restore counts differ" >&2
   exit 1
 fi
