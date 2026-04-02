@@ -17,12 +17,10 @@ echo "[v3] ensure stack is up"
 
 echo "[v3] dump source database to container tmp"
 "${DOCKER_BIN}" compose exec -T postgres sh -lc '
-  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -f /tmp/dw_v3.dump
-'
+  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc
+' > "${BACKUP_FILE}"
 
-echo "[v3] copy dump to host"
-"${DOCKER_BIN}" cp ca-postgres:/tmp/dw_v3.dump "${BACKUP_FILE}"
-"${DOCKER_BIN}" compose exec -T postgres sh -lc 'rm -f /tmp/dw_v3.dump'
+echo "[v3] dump stored on host"
 ls -lh "${BACKUP_FILE}"
 
 echo "[v3] recreate restore target database: ${RESTORE_DB}"
@@ -31,13 +29,10 @@ echo "[v3] recreate restore target database: ${RESTORE_DB}"
   psql -U \"\$POSTGRES_USER\" -d postgres -v ON_ERROR_STOP=1 -c \"CREATE DATABASE ${RESTORE_DB} OWNER \\\"\$POSTGRES_USER\\\";\"
 "
 
-echo "[v3] copy dump into container for restore"
-"${DOCKER_BIN}" cp "${BACKUP_FILE}" ca-postgres:/tmp/dw_v3.dump
-
 echo "[v3] restore into ${RESTORE_DB}"
 "${DOCKER_BIN}" compose exec -T postgres sh -lc "
-  pg_restore -U \"\$POSTGRES_USER\" -d ${RESTORE_DB} --clean --if-exists /tmp/dw_v3.dump
-"
+  pg_restore -U \"\$POSTGRES_USER\" -d ${RESTORE_DB} --clean --if-exists
+" < "${BACKUP_FILE}"
 
 echo "[v3] validate row counts"
 SRC_COUNTS="$("${DOCKER_BIN}" compose exec -T postgres sh -lc '
