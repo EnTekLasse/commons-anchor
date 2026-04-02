@@ -38,7 +38,7 @@ services:
     command:
       - sh
       - -c
-      - python -m scripts.energidataservice_ingest --db-password "$$(cat /run/secrets/postgres_password)"
+      - python -m scripts.ingest.energidataservice_ingest --db-password "$$(cat /run/secrets/postgres_password)"
     secrets:
       - postgres_password
     depends_on:
@@ -97,7 +97,7 @@ services:
     command:
       - sh
       - -c
-      - python -m scripts.mqtt_ingest --db-password "$$(cat /run/secrets/postgres_password)"
+      - python -m scripts.ingest.mqtt_ingest --db-password "$$(cat /run/secrets/postgres_password)"
     secrets:
       - postgres_password
     depends_on:
