@@ -95,9 +95,9 @@ Draft rule notes:
 - Allowed source policy:
   - Initial pre-hardware baseline: allow from internet to WireGuard UDP only.
   - SSH must never be opened broadly on WAN.
-- SSH LAN CIDR:
-  - Planned management subnet: `192.168.1.0/24` (adjust to real LAN during go-live).
-  - UFW example: `sudo ufw allow from 192.168.1.0/24 to any port 22 proto tcp`
+- SSH tunnel CIDR:
+  - Management subnet: `10.100.0.0/24` (WireGuard tunnel only — no LAN SSH on Hetzner).
+  - UFW example: `sudo ufw allow from 10.100.0.0/24 to any port 22 proto tcp`
 - Explicit deny statement:
   - Do not permit public SSH (`22/tcp`) from `0.0.0.0/0`.
   - If needed, enforce deny rule: `sudo ufw deny 22/tcp`

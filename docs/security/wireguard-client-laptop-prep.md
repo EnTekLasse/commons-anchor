@@ -190,7 +190,13 @@ Host *
 
 Host hetzner-wg
     HostName 10.100.0.1
-    User root
+    User admin
+    IdentityFile ~/.ssh/id_ed25519_hetzner_admin_laptop_01
+    IdentitiesOnly yes
+
+Host lenovo-wg
+    HostName 10.100.0.3
+    User enteklasse
     IdentityFile ~/.ssh/id_ed25519_hetzner_admin_laptop_01
     IdentitiesOnly yes
 ```
