@@ -36,6 +36,7 @@ class Settings:
     db_name: str
     db_user: str
     db_password: str
+    db_connect_timeout: int
 
 
 def parse_args() -> argparse.Namespace:
@@ -52,6 +53,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--db-name")
     parser.add_argument("--db-user")
     parser.add_argument("--db-password")
+    parser.add_argument("--db-connect-timeout", type=int)
     return parser.parse_args()
 
 
@@ -81,11 +83,16 @@ def load_settings(args: argparse.Namespace) -> Settings:
             args.limit if args.limit is not None else int(os.getenv("ENERGIDATASERVICE_LIMIT", "0"))
         ),
         api_base_url="https://api.energidataservice.dk/dataset",
-        db_host=args.db_host or os.getenv("DW_HOST", "localhost"),
+        db_host=args.db_host or os.getenv("DW_HOST", "127.0.0.1"),
         db_port=args.db_port or int(os.getenv("DW_PORT", "5432")),
         db_name=db_name,
         db_user=db_user,
         db_password=db_password,
+        db_connect_timeout=(
+            args.db_connect_timeout
+            if args.db_connect_timeout is not None
+            else int(os.getenv("DW_CONNECT_TIMEOUT", "10"))
+        ),
     )
 
 
@@ -148,6 +155,7 @@ def write_records(settings: Settings, rows: list[tuple[Any, ...]]) -> None:
         dbname=settings.db_name,
         user=settings.db_user,
         password=settings.db_password,
+        connect_timeout=settings.db_connect_timeout,
     ) as connection:
         with connection.cursor() as cursor:
             cursor.executemany(
