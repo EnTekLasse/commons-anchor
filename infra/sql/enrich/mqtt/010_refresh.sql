@@ -1,2 +1,0 @@
--- Placeholder for MQTT enrich refresh logic.
--- Keep this file so source folders stay structurally consistent.

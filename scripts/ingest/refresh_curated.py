@@ -76,7 +76,24 @@ def get_db_connection(
 def refresh_materialized_view(conn: psycopg.Connection, view_name: str) -> dict:
     cursor = conn.cursor()
     try:
-        cursor.execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view_name};")
+        schema_name, object_name = view_name.split(".", 1)
+        cursor.execute(
+            """
+            SELECT ispopulated
+            FROM pg_matviews
+            WHERE schemaname = %s
+              AND matviewname = %s
+            """,
+            (schema_name, object_name),
+        )
+        row = cursor.fetchone()
+        is_populated = bool(row[0]) if row is not None else False
+
+        if is_populated:
+            cursor.execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view_name};")
+        else:
+            cursor.execute(f"REFRESH MATERIALIZED VIEW {view_name};")
+
         cursor.execute(f"SELECT COUNT(*) FROM {view_name};")
         row_count = cursor.fetchone()[0]
         conn.commit()
