@@ -27,7 +27,7 @@ $venvPython = Join-Path $projectRoot ".venv\Scripts\python.exe"
 $pythonCmd = if (Test-Path $venvPython) { $venvPython } else { "python" }
 
 Write-Host "Refreshing materialized views on ${HostName}:$Port/$Database ..."
-& $pythonCmd (Join-Path $PSScriptRoot "refresh_serving.py") --view all --host $HostName --port $Port --db $Database --user $UserName --verbose
+& $pythonCmd (Join-Path $PSScriptRoot "ingest\refresh_curated.py") --view all --host $HostName --port $Port --db $Database --user $UserName --verbose
 
 if ($LASTEXITCODE -ne 0) {
     throw "Refresh failed with exit code $LASTEXITCODE"
