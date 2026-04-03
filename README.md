@@ -84,6 +84,43 @@ git check-ignore -v wg-client.conf
 
 For the full security/reproducibility contract, see [docs/security/local-secrets-baseline.md](docs/security/local-secrets-baseline.md).
 
+## Daily pipeline commands (short)
+
+Use these commands for the normal ingest + refresh cycle without manual password handling.
+
+Windows (laptop):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ingest/run_pipeline.ps1
+```
+
+Linux (Lenovo via SSH):
+
+```bash
+chmod +x scripts/ingest/run_pipeline.sh
+./scripts/ingest/run_pipeline.sh
+```
+
+What these wrappers do:
+- Read DB password from `infra/secrets/postgres_password.secret`
+- Run energidata ingest (`scripts/ingest/energidataservice_ingest.py`)
+- Refresh curated materialized views (`scripts/ingest/refresh_curated.py`)
+
+Optional DMI Climate step:
+- Windows: `powershell -ExecutionPolicy Bypass -File scripts/ingest/run_pipeline.ps1 -IncludeDmiClimate`
+- Linux: `INCLUDE_DMI_CLIMATE=1 ./scripts/ingest/run_pipeline.sh`
+- This runs `scripts/ingest/dmi_climate_ingest.py --since-latest` before refresh, so the wrapper uses incremental fetch instead of replaying the default historical seed window.
+
+Optional direct commands:
+
+```bash
+dw-refresh --view all --verbose
+```
+
+```bash
+energidata-ingest
+```
+
 ## Motivation
 
 The project is intentionally designed as a long-term learning system.
@@ -135,6 +172,7 @@ flowchart TB
     direction TB
     U["Remote admin"]
     WG["WireGuard"]
+    VPS["WireGuard hub<br/>Hetzner CX23 VPS"]
     SSH["SSH on private LAN"]
     H["Ubuntu Server<br/>Lenovo Tiny"]
   end
@@ -197,7 +235,8 @@ flowchart TB
   SV -->|query| G
   SV -->|query| MB
   U -->|WireGuard VPN| WG
-  WG -->|private tunnel| SSH
+  WG -->|tunnel to public hub| VPS
+  VPS -->|routed private path| SSH
   SSH -->|admin session| H
 ```
 <!-- AUTO_SYSTEMARCH_END -->
@@ -248,6 +287,10 @@ kanban
     [3 SP - Toolchain hardening pass]
 
     [3 SP - Hardware bring-up baseline]
+
+    [3 SP - Branching strategy and PR template]
+
+    [2 SP - ADR template and first architecture decisions]
 
     [3 SP - ML data readiness baseline]
 
@@ -324,6 +367,8 @@ flowchart TD
   T2[Node T2<br/>Toolchain automation baseline<br/>3 SP]
   T3[Node T3<br/>Toolchain hardening pass<br/>3 SP]
   HW1[Node HW1<br/>Hardware bring-up baseline<br/>3 SP]
+  W1[Node W1<br/>Branching strategy and PR template<br/>3 SP]
+  W2[Node W2<br/>ADR template and first architecture decisions<br/>2 SP]
   M1[Node M1<br/>ML data readiness baseline<br/>3 SP]
   M2[Node M2<br/>Feature pipeline template<br/>5 SP]
   M3[Node M3<br/>Model registry and versioning baseline<br/>3 SP]
@@ -374,6 +419,8 @@ flowchart TD
   T2 --> T3
   B2 --> HW1
   T1 --> HW1
+  T2 --> W1
+  T1 --> W2
   C3 --> M1
   V2 --> M1
   M1 --> M2
@@ -420,6 +467,8 @@ flowchart TD
   class T2 done
   class T3 backlog
   class HW1 backlog
+  class W1 backlog
+  class W2 backlog
   class M1 backlog
   class M2 backlog
   class M3 backlog
@@ -688,25 +737,6 @@ Full Mermaid compile validation (all diagrams + README blocks):
 
 ```text
 .
-|- pyproject.toml
-|- docker-compose.yml
-|- .env.example
-|- .github/workflows/mermaid-validate.yml
-|- infra/
-|  |- mosquitto/config/mosquitto.conf
-|  \- sql/001_bootstrap.sql
-\- docs/
-	|- architecture/
-	|  |- adr-0001-platform-scope.md
-	|  |- mermaid-guidelines.md
-	|  |- mermaid-templates.md
-	|  \- diagrams/
-  |- toolchain.md
-	|- infra/ubuntu-lenovo-tiny.md
-	|- roadmap/backlog.md
-	\- security/wireguard-remote-access.md
-```text
-.
 |- pyproject.toml               # project metadata, entrypoints, dev deps
 |- docker-compose.yml           # all services (Postgres, Mosquitto, Grafana)
 |- .env.example                 # environment variable template
@@ -727,14 +757,12 @@ Full Mermaid compile validation (all diagrams + README blocks):
 |     |  \- mqtt/001_create_tables.sql
 |     |- enrich/
 |     |  |- energidataservice/
-|     |  |  |- 001_create_tables.sql
-|     |  |  \- 010_refresh.sql
+|     |  |  \- 001_create_views.sql
 |     |  \- mqtt/
-|     |     |- 001_create_tables.sql
-|     |     \- 010_refresh.sql
+|     |     \- 001_create_views.sql
 |     |- curated/
 |     |  \- power_price/
-|     |     |- 001_create_tables.sql
+|     |     |- 001_create_materialized_views.sql
 |     |     \- 010_refresh.sql
 |     \- serving/
 |        \- power_price_overview/001_create_views.sql
@@ -742,10 +770,16 @@ Full Mermaid compile validation (all diagrams + README blocks):
 |  |- local_quality_gate.py     # single-command quality gate
 |  |- check_mermaid_compile.py  # Mermaid compile validation
 |  |- check_sql_syntax.py
-|  |- energidataservice_ingest.py
 |  |- generate_mermaid_from_model.py
-|  \- mqtt_ingest.py
+|  |- refresh_serving.py        # compatibility wrapper
+|  \- ingest/
+|     |- energidataservice_ingest.py
+|     |- mqtt_ingest.py
+|     |- refresh_curated.py
+|     |- run_pipeline.ps1
+|     \- run_pipeline.sh
 |- docs/architecture/sql-delivery-playbook.md
+|- docs/architecture/api-timeseries-ingest-template-guide.md
 |- tests/
 |  |- test_energidataservice_ingest.py
 |  \- test_mqtt_ingest.py
@@ -764,7 +798,6 @@ Full Mermaid compile validation (all diagrams + README blocks):
   |- security/wireguard-remote-access.md
   |- glossary.md
   \- toolchain.md
-```
 ```
 
 ## Delivery model

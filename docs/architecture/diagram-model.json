@@ -5,7 +5,7 @@
       {
         "name": "Ops access",
         "direction": "TB",
-        "nodes": ["U", "WG", "SSH", "H"]
+        "nodes": ["U", "WG", "VPS", "SSH", "H"]
       },
       {
         "name": "Sources",
@@ -53,6 +53,7 @@
       { "id": "MO", "label": "Model registry + metadata", "shape": "rect" },
       { "id": "U", "label": "Remote admin", "shape": "rect" },
       { "id": "WG", "label": "WireGuard", "shape": "rect" },
+      { "id": "VPS", "label": "WireGuard hub<br/>Hetzner CX23 VPS", "shape": "rect" },
       { "id": "SSH", "label": "SSH on private LAN", "shape": "rect" },
       { "id": "H", "label": "Ubuntu Server<br/>Lenovo Tiny", "shape": "rect" },
       { "id": "L1", "label": "Legend:<br/>solid arrows = data/access flow<br/>feature/training flow = Enriched/Curated -> ML Feature -> Python<br/>serving flow = ML Results/Curated -> Semantic views<br/>edge labels = protocol/action", "shape": "rect" }
@@ -77,7 +78,8 @@
       ["SV", "G", "query"],
       ["SV", "MB", "query"],
       ["U", "WG", "WireGuard VPN"],
-      ["WG", "SSH", "private tunnel"],
+      ["WG", "VPS", "tunnel to public hub"],
+      ["VPS", "SSH", "routed private path"],
       ["SSH", "H", "admin session"]
     ]
   },

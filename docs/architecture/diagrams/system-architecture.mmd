@@ -4,6 +4,7 @@ flowchart TB
     direction TB
     U["Remote admin"]
     WG["WireGuard"]
+    VPS["WireGuard hub<br/>Hetzner CX23 VPS"]
     SSH["SSH on private LAN"]
     H["Ubuntu Server<br/>Lenovo Tiny"]
   end
@@ -66,5 +67,6 @@ flowchart TB
   SV -->|query| G
   SV -->|query| MB
   U -->|WireGuard VPN| WG
-  WG -->|private tunnel| SSH
+  WG -->|tunnel to public hub| VPS
+  VPS -->|routed private path| SSH
   SSH -->|admin session| H

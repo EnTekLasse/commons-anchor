@@ -98,6 +98,9 @@ Example source name used below: `dmi_climate`.
 10. Validate with the short pipeline wrappers:
    - Windows: `powershell -ExecutionPolicy Bypass -File scripts/ingest/run_pipeline.ps1`
    - Linux: `./scripts/ingest/run_pipeline.sh`
+   - Optional DMI Climate run: `powershell -ExecutionPolicy Bypass -File scripts/ingest/run_pipeline.ps1 -IncludeDmiClimate`
+   - Optional DMI Climate run: `INCLUDE_DMI_CLIMATE=1 ./scripts/ingest/run_pipeline.sh`
+   - The optional DMI step uses `--since-latest` to make repeat runs incremental.
 
 ## Generic API example contract
 
