@@ -21,6 +21,7 @@ class Settings:
     start: str
     end: str | None
     limit: int
+    since_latest: bool
     db_host: str
     db_port: int
     db_name: str
@@ -39,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--start")
     parser.add_argument("--end")
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--since-latest", action="store_true")
     parser.add_argument("--db-host")
     parser.add_argument("--db-port", type=int)
     parser.add_argument("--db-name")
@@ -64,6 +66,7 @@ def load_settings(args: argparse.Namespace) -> Settings:
         start=args.start or os.getenv("DMI_CLIMATE_START", "2024-01-01T00:00:00Z"),
         end=args.end or os.getenv("DMI_CLIMATE_END") or None,
         limit=(args.limit if args.limit is not None else int(os.getenv("DMI_CLIMATE_LIMIT", "500"))),
+        since_latest=args.since_latest or os.getenv("DMI_CLIMATE_SINCE_LATEST", "0") == "1",
         db_host=args.db_host or os.getenv("DW_HOST", "127.0.0.1"),
         db_port=args.db_port or int(os.getenv("DW_PORT", "5432")),
         db_name=args.db_name or os.getenv("POSTGRES_DB", "dw"),
@@ -93,8 +96,54 @@ def build_request_params(settings: Settings) -> dict[str, str]:
     return params
 
 
+def resolve_incremental_start(settings: Settings) -> str:
+    with psycopg.connect(
+        host=settings.db_host,
+        port=settings.db_port,
+        dbname=settings.db_name,
+        user=settings.db_user,
+        password=settings.db_password,
+        connect_timeout=settings.db_connect_timeout,
+    ) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT MAX(source_time_text)
+                FROM staging.dmi_climate_raw
+                WHERE municipality_id = %s
+                  AND parameter_id = %s
+                  AND time_resolution = %s
+                """,
+                (settings.municipality_id, settings.parameter_id, settings.time_resolution),
+            )
+            row = cursor.fetchone()
+
+    if row is None or row[0] is None:
+        return settings.start
+
+    return str(row[0])
+
+
 def fetch_records(settings: Settings) -> list[dict[str, Any]]:
-    response = requests.get(API_URL, params=build_request_params(settings), timeout=30)
+    request_settings = settings
+    if settings.since_latest:
+        request_settings = Settings(
+            municipality_id=settings.municipality_id,
+            parameter_id=settings.parameter_id,
+            time_resolution=settings.time_resolution,
+            start=resolve_incremental_start(settings),
+            end=settings.end,
+            limit=settings.limit,
+            since_latest=settings.since_latest,
+            db_host=settings.db_host,
+            db_port=settings.db_port,
+            db_name=settings.db_name,
+            db_user=settings.db_user,
+            db_password=settings.db_password,
+            db_connect_timeout=settings.db_connect_timeout,
+        )
+
+    response = requests.get(API_URL, params=build_request_params(request_settings), timeout=30)
     response.raise_for_status()
     payload = response.json()
     records = payload.get("features")
@@ -172,7 +221,8 @@ def main() -> int:
     write_records(settings, rows)
     print(
         f"Ingested {len(rows)} DMI Climate rows for municipality {settings.municipality_id} "
-        f"and parameter {settings.parameter_id} into {settings.db_name}@{settings.db_host}:{settings.db_port}."
+        f"and parameter {settings.parameter_id} into {settings.db_name}@{settings.db_host}:{settings.db_port} "
+        f"(since_latest={settings.since_latest})."
     )
     return 0
 
