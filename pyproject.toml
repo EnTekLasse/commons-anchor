@@ -18,6 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
+dmi-climate-ingest = "scripts.ingest.dmi_climate_ingest:main"
 energidata-ingest = "scripts.ingest.energidataservice_ingest:main"
 dw-refresh = "scripts.ingest.refresh_curated:main"
 mqtt-ingest = "scripts.ingest.mqtt_ingest:main"

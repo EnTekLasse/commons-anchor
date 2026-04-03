@@ -11,4 +11,5 @@
 --   container volume mount in docker-compose.
 
 -- Curated layer: main fact tables and metrics
+\i /sql/curated/dmi_climate_temperature/010_refresh.sql
 \i /sql/curated/power_price/010_refresh.sql

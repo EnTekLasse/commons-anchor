@@ -120,7 +120,10 @@ def main() -> int:
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    views = {"power_price": "mart.power_price_15min"}
+    views = {
+        "dmi_climate_temperature": "mart.dmi_climate_temperature_hourly",
+        "power_price": "mart.power_price_15min",
+    }
     if args.view.lower() == "all":
         views_to_refresh = list(views.values())
     elif args.view in views:

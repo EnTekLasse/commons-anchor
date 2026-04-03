@@ -29,8 +29,8 @@ Planned mapping:
 
 - Ingestion: Python scripts in `scripts/ingest` load source-faithful rows into Raw.
 - Raw folder: `raw/<source>/001_create_tables.sql`
-- Enrich folder: `enrich/<source>/001_create_tables.sql` and `010_refresh.sql`
-- Curated folder: `curated/<star_schema>/001_create_tables.sql` and `010_refresh.sql`
+- Enrich folder: `enrich/<source>/001_create_views.sql`
+- Curated folder: `curated/<star_schema>/001_create_materialized_views.sql` and `010_refresh.sql`
 - Serving folder: `serving/<usecase>/001_create_views.sql`
 - ML Feature folder: `ml_feature/<feature_group>/001_create_tables.sql` and `010_refresh.sql`
 - Refresh orchestration: `infra/sql/020_refresh_all.sql`
@@ -51,6 +51,17 @@ Target convention:
 - Curated: domain marts organized as star schemas (facts + dimensions), independent of source folder boundaries.
 - Serving: semantic views organized by business entity/metric groups, independent of source-specific raw/enriched modules.
 - Use consistent filenames inside folders so related create/refresh files sort together visually.
+- For providers with multiple APIs, use `<provider>_<api_family>` naming in folders and script names.
+
+Examples:
+
+- `dmi_climate`
+- `dmi_meteorological_observations`
+- `dmi_oceanographic_observations`
+- `dmi_lightning`
+- `dmi_radar`
+- `dmi_forecast_stac`
+- `dmi_forecast_edr`
 
 ## Data Contracts
 

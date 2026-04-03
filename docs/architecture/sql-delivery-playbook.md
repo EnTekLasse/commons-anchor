@@ -5,11 +5,11 @@ This guide describes how SQL work should be added and changed in Commons Anchor.
 ## Core Rules
 
 - Raw is source-faithful.
-- Enrich is where typing, cleanup, renaming, and business-safe standardization begin.
-- Curated is where business-facing marts and star schemas are built.
+- Enrich is where typing, cleanup, renaming, and business-safe standardization begin, implemented as views.
+- Curated is where business-facing marts and star schemas are built, implemented as materialized views.
 - Serving is where stable views for Grafana, Metabase, and APIs are published.
 - `001_bootstrap.sql` is only for fresh database initialization.
-- `020_refresh_all.sql` is only for rebuildable layers such as Enrich and Curated.
+- `020_refresh_all.sql` is only for refreshable materialized layers (currently Curated).
 - Existing databases are changed through migrations under `infra/sql/migrations`, not by hoping bootstrap files will be re-run.
 
 ## SQL Layout
@@ -24,11 +24,10 @@ infra/sql/
       001_create_tables.sql
   enrich/
     <source>/
-      001_create_tables.sql
-      010_refresh.sql
+      001_create_views.sql
   curated/
     <star_schema>/
-      001_create_tables.sql
+      001_create_materialized_views.sql
       010_refresh.sql
   serving/
     <usecase>/
@@ -39,23 +38,27 @@ Naming rules:
 
 - Use one folder per source, star schema, or serving use case.
 - Reuse the same filenames inside those folders.
-- Use `001_...` for create/bootstrap definitions.
-- Use `010_refresh.sql` for rerunnable rebuild logic.
+- Use `001_create_tables.sql` for raw layer table DDL.
+- Use `001_create_views.sql` for enrich or serving view DDL.
+- Use `001_create_materialized_views.sql` for curated materialized views.
+- Use `010_refresh.sql` for rerunnable refresh logic on materialized views.
 - Keep folders aligned with ingest scripts and business models.
 
 ## Add a New Source
 
 Example: add a weather API source.
 
+If you want a ready-to-copy template set (ingest + raw/enrich/curated/serving), start with [docs/architecture/api-timeseries-ingest-template-guide.md](api-timeseries-ingest-template-guide.md).
+
 1. Add the ingest script under `scripts/ingest/weather_ingest.py`.
 2. Add raw DDL under `infra/sql/raw/weather/001_create_tables.sql`.
 3. Make the ingest script write source-faithful rows only.
-4. Add enrich DDL under `infra/sql/enrich/weather/001_create_tables.sql`.
-5. Add enrich transform logic under `infra/sql/enrich/weather/010_refresh.sql`.
+4. Add enrich DDL under `infra/sql/enrich/weather/001_create_views.sql`.
+5. Keep enrich logic declarative in the view definition (no enrich refresh file).
 6. If the source feeds an existing mart, update that curated refresh file.
-7. If the source needs a new mart, create `infra/sql/curated/<star_schema>/001_create_tables.sql` and `010_refresh.sql`.
+7. If the source needs a new mart, create `infra/sql/curated/<star_schema>/001_create_materialized_views.sql` and `010_refresh.sql`.
 8. Add the new create scripts to `infra/sql/001_bootstrap.sql` in dependency order.
-9. Add the new refresh script to `infra/sql/020_refresh_all.sql` in dependency order.
+9. Add the new curated refresh script to `infra/sql/020_refresh_all.sql` in dependency order.
 10. Add or update tests for the ingest script and smoke checks for raw/enrich data presence.
 
 Definition of done for a new source:
@@ -72,27 +75,27 @@ There are two types of change.
 
 ### A. Logic-only change
 
-Example: rename a derived expression in SQL logic or multiply a numeric value by 2.
+Example: change a derived expression in a view or adjust a numeric conversion.
 
-Use this path when the table shape does not change.
+Use this path when the view output contract does not break downstream dependencies.
 
-1. Edit the relevant `infra/sql/enrich/<source>/010_refresh.sql`.
+1. Edit the relevant `infra/sql/enrich/<source>/001_create_views.sql`.
 2. If the output meaning changes, update downstream curated or serving SQL.
-3. Run the refresh flow.
-4. Validate the enriched rows and the downstream mart rows.
+3. Run the curated refresh flow.
+4. Validate the enriched view rows and downstream mart rows.
 
 This kind of change does not need a migration.
 
 ### B. Schema change
 
-Example: rename an enrich column from `price_dkk_mwh` to `price_dkk_per_mwh_adjusted`.
+Example: rename an exposed enrich view column from `price_dkk_mwh` to `price_dkk_mwh_adjusted`.
 
-Use this path when table structure changes.
+Use this path when SQL interface changes impact downstream objects.
 
 1. Add a migration file under `infra/sql/migrations/`.
 2. Apply the migration to the target database.
-3. Update `infra/sql/enrich/<source>/001_create_tables.sql` so fresh bootstrap matches the new schema.
-4. Update `infra/sql/enrich/<source>/010_refresh.sql`.
+3. Update `infra/sql/enrich/<source>/001_create_views.sql` so fresh bootstrap matches the new interface.
+4. Update curated and serving objects that select the renamed field.
 5. Update downstream curated and serving SQL.
 6. Run the refresh flow.
 7. Validate the result.
@@ -100,14 +103,12 @@ Use this path when table structure changes.
 Example migration:
 
 ```sql
-ALTER TABLE enrich.energinet_price
-RENAME COLUMN price_dkk_mwh TO price_dkk_mwh_adjusted;
-```
-
-Example logic change after that:
-
-```sql
-ROUND((raw.record ->> 'DayAheadPriceDKK')::NUMERIC * 2, 4) AS price_dkk_mwh_adjusted
+CREATE OR REPLACE VIEW enrich.energinet_price AS
+SELECT
+  ...,
+  ROUND((raw.record ->> 'DayAheadPriceDKK')::NUMERIC * 2, 4) AS price_dkk_mwh_adjusted,
+  ...
+FROM staging.energinet_raw AS raw;
 ```
 
 ## Refresh Workflow
@@ -115,16 +116,29 @@ ROUND((raw.record ->> 'DayAheadPriceDKK')::NUMERIC * 2, 4) AS price_dkk_mwh_adju
 For existing databases, use the explicit refresh runner:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ingest/run_pipeline.ps1
+```
+
+Linux equivalent:
+
+```bash
+./scripts/ingest/run_pipeline.sh
+```
+
+For container-only refresh (without ingest), use:
+
+```powershell
 docker compose --profile jobs run --rm power-price-transform
 ```
 
-Today this job runs `infra/sql/020_refresh_all.sql`, which in turn includes refresh files in dependency order.
+This job runs `infra/sql/020_refresh_all.sql`, which includes curated refresh files in dependency order.
 
 Keep this ordering discipline:
 
-1. Enrich refreshes first.
-2. Curated refreshes second.
-3. Serving refreshes only if they are materialized or otherwise rebuildable.
+1. Ingest writes raw data.
+2. Enrich views expose transformed rows automatically.
+3. Curated materialized views refresh after ingest.
+4. Serving views read curated data immediately after refresh.
 
 ## Bootstrap Workflow
 
@@ -216,3 +230,4 @@ Before merging a SQL change, verify:
 - Did `001_bootstrap.sql` stay in sync with create files?
 - Did `020_refresh_all.sql` stay in sync with refresh files?
 - Did downstream marts or views need updates?
+- Does the change preserve first-run behavior for unpopulated materialized views?
