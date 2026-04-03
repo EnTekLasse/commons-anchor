@@ -129,6 +129,68 @@
       ],
       "title": "Latest 15-Min Rows",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres-dw"
+      },
+      "description": "Hourly municipality mean temperature from DMI Climate (step view, same style as power price).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepBefore",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "never"
+          },
+          "decimals": 2,
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres-dw"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ts_from_utc AS \"time\", municipality_name AS metric, mean_temp_c AS value\nFROM semantic.dmi_climate_temperature_last_7d\nWHERE $__timeFilter(ts_from_utc)\nORDER BY ts_from_utc, municipality_name;",
+          "refId": "A"
+        }
+      ],
+      "title": "Hourly Mean Temperature by Municipality",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
@@ -137,7 +199,8 @@
   "tags": [
     "commons-anchor",
     "energidata",
-    "power-price"
+    "power-price",
+    "dmi-climate"
   ],
   "templating": {
     "list": []
